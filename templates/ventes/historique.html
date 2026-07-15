@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Historique des ventes{% endblock %}
+{% block page_title %}Historique des ventes{% endblock %}
+
+{% block content %}
+<div class="content-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-6 col-md-2">
+            <label class="form-label small">Date début</label>
+            <input type="date" name="date_debut" value="{{ filtres.date_debut }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small">Date fin</label>
+            <input type="date" name="date_fin" value="{{ filtres.date_fin }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small">Demandeur</label>
+            <input type="text" name="demandeur" value="{{ filtres.demandeur }}" class="form-control form-control-sm" placeholder="code ou nom">
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small">Type</label>
+            <select name="type" class="form-select form-select-sm">
+                <option value="">Tous</option>
+                {% for value, label in categories %}
+                    <option value="{{ value }}" {% if filtres.type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small">Code Vente</label>
+            <input type="text" name="code" value="{{ filtres.code }}" class="form-control form-control-sm" placeholder="BG_…">
+        </div>
+        <div class="col-12 col-md-1 d-grid">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-filter"></i></button>
+        </div>
+    </form>
+</div>
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="h5 mb-0">Résultats</h2>
+        <div class="btn-group">
+            <a href="{% url 'ventes:export_excel' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-success">
+                <i class="fa-solid fa-file-excel me-1"></i> Excel
+            </a>
+            <a href="{% url 'ventes:export_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-danger">
+                <i class="fa-solid fa-file-pdf me-1"></i> PDF
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                <i class="fa-solid fa-print me-1"></i> Imprimer
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive printable">
+        <table class="table table-hover align-middle datatable">
+            <thead>
+                <tr>
+                    <th>Code Vente</th>
+                    <th>Demandeur</th>
+                    <th class="text-end">Quantité (Kg)</th>
+                    <th class="text-end">Prix Unitaire</th>
+                    <th class="text-end">Prix Total</th>
+                    <th>Date</th>
+                    <th>Utilisateur</th>
+                    <th class="text-end no-print">Ticket</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for v in ventes %}
+                <tr>
+                    <td>{{ v.code_vente }}</td>
+                    <td>{{ v.demandeur.libelle }}</td>
+                    <td class="text-end">{{ v.quantite }}</td>
+                    <td class="text-end">{{ v.prix_unitaire }}</td>
+                    <td class="text-end">{{ v.prix_total }}</td>
+                    <td>{{ v.date_vente|date:"d/m/Y" }}</td>
+                    <td>{{ v.utilisateur.get_full_name|default:v.utilisateur.username }}</td>
+                    <td class="text-end no-print">
+                        <a href="{% url 'ventes:ticket' v.pk %}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fa-solid fa-print"></i>
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="8" class="text-center text-muted">Aucune vente ne correspond aux filtres.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

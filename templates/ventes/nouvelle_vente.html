@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Nouvelle vente{% endblock %}
+{% block page_title %}Nouvelle vente{% endblock %}
+
+{% block content %}
+{% if not referentiel_actif %}
+<div class="alert alert-warning">
+    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+    Aucun référentiel actif. Un administrateur doit activer un référentiel avant d'enregistrer des ventes.
+</div>
+{% endif %}
+
+<div class="content-card" style="max-width: 760px;">
+    <form method="post" id="venteForm" novalidate
+          data-search-url="{% url 'demandeurs:search' %}"
+          data-prix-unitaire="{% if referentiel_actif %}{{ referentiel_actif.prix_unitaire }}{% else %}0{% endif %}">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="row g-3">
+            <!-- Code BG (auto) -->
+            <div class="col-md-6">
+                <label class="form-label">Code BG</label>
+                <input type="text" class="form-control" value="{{ code_preview }}" readonly>
+                <div class="form-text">Généré automatiquement à l'enregistrement.</div>
+            </div>
+
+            <!-- Date de vente -->
+            <div class="col-md-6">
+                <label class="form-label" for="id_date_vente">Date de vente</label>
+                {{ form.date_vente }}
+                {% for e in form.date_vente.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+
+            <!-- Demandeur -->
+            <div class="col-12">
+                <label class="form-label">Demandeur</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="demandeurDisplay"
+                           placeholder="Aucun demandeur sélectionné" readonly>
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#demandeurModal">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Choisir
+                    </button>
+                </div>
+                {{ form.demandeur }}
+                {% for e in form.demandeur.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+
+            <!-- Prix unitaire (auto, lecture seule) -->
+            <div class="col-md-4">
+                <label class="form-label">Prix unitaire (DH/Kg)</label>
+                <input type="text" class="form-control" id="prixUnitaire"
+                       value="{% if referentiel_actif %}{{ referentiel_actif.prix_unitaire }}{% else %}—{% endif %}" readonly>
+            </div>
+
+            <!-- Prix total (saisi) -->
+            <div class="col-md-4">
+                <label class="form-label" for="id_prix_total">Prix total (DH)</label>
+                {{ form.prix_total }}
+                {% for e in form.prix_total.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+
+            <!-- Quantité (auto) -->
+            <div class="col-md-4">
+                <label class="form-label">Quantité (Kg)</label>
+                <input type="text" class="form-control" id="quantiteAffichee" readonly placeholder="0.000">
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-lg" {% if not referentiel_actif %}disabled{% endif %}>
+                <i class="fa-solid fa-floppy-disk me-1"></i> Enregistrer
+            </button>
+            <a href="{% url 'ventes:historique' %}" class="btn btn-outline-secondary btn-lg">Historique</a>
+        </div>
+    </form>
+</div>
+
+<!-- Modale de sélection du demandeur -->
+<div class="modal fade" id="demandeurModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-address-book me-2"></i>Sélectionner un demandeur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-3" id="demandeurSearch"
+                       placeholder="Rechercher par code ou nom…" autocomplete="off">
+                <p class="text-muted small mb-2">Double-cliquez sur une ligne pour sélectionner.</p>
+                <div class="list-group" id="demandeurResults"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pop-up ticket (après enregistrement) -->
+{% if ticket_vente %}
+<div class="modal fade" id="ticketModal" tabindex="-1" aria-hidden="true" data-autoshow="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header no-print">
+                <h5 class="modal-title text-success"><i class="fa-solid fa-circle-check me-2"></i>Vente enregistrée</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% with vente=ticket_vente %}
+                    {% include "partials/_ticket.html" %}
+                {% endwith %}
+            </div>
+            <div class="modal-footer no-print">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">
+                    <i class="fa-solid fa-print me-1"></i> Imprimer le ticket
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/vente.js' %}"></script>
+{% endblock %}

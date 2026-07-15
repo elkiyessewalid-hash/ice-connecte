@@ -1,0 +1,102 @@
+/* ============================================================
+   Saisie de vente : calcul live, sélection du demandeur, ticket
+   ============================================================ */
+(function () {
+  "use strict";
+
+  const form = document.getElementById("venteForm");
+  if (!form) return;
+
+  const prixUnitaire = parseFloat(form.dataset.prixUnitaire || "0");
+  const searchUrl = form.dataset.searchUrl;
+
+  const prixTotalInput = document.getElementById("id_prix_total");
+  const quantiteAffichee = document.getElementById("quantiteAffichee");
+  const demandeurHidden = document.getElementById("id_demandeur");
+  const demandeurDisplay = document.getElementById("demandeurDisplay");
+
+  // ---- Calcul live : Qté (Kg) = Prix total / Prix unitaire ----
+  function recalculerQuantite() {
+    const total = parseFloat(prixTotalInput.value);
+    if (!prixUnitaire || isNaN(total) || total <= 0) {
+      quantiteAffichee.value = "";
+      return;
+    }
+    quantiteAffichee.value = (total / prixUnitaire).toFixed(3);
+  }
+  if (prixTotalInput) {
+    prixTotalInput.addEventListener("input", recalculerQuantite);
+    recalculerQuantite(); // au cas où le champ est pré-rempli
+  }
+
+  // ---- Recherche de demandeurs (modale) ----
+  const searchInput = document.getElementById("demandeurSearch");
+  const resultsBox = document.getElementById("demandeurResults");
+  let debounce = null;
+
+  function chargerDemandeurs(q) {
+    fetch(searchUrl + "?q=" + encodeURIComponent(q), {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    })
+      .then((r) => r.json())
+      .then((data) => afficherResultats(data.results || []))
+      .catch(() => {
+        resultsBox.innerHTML =
+          '<div class="text-danger small p-2">Erreur de chargement.</div>';
+      });
+  }
+
+  function afficherResultats(items) {
+    resultsBox.innerHTML = "";
+    if (!items.length) {
+      resultsBox.innerHTML =
+        '<div class="text-muted small p-2">Aucun demandeur actif trouvé.</div>';
+      return;
+    }
+    items.forEach((d) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "list-group-item list-group-item-action";
+      el.innerHTML =
+        '<div class="d-flex justify-content-between">' +
+        '<span><strong>' + d.code + "</strong> — " + d.libelle + "</span>" +
+        '<span class="badge bg-light text-dark">' + d.categorie + " · " + d.statut + "</span>" +
+        "</div>";
+      // Double-clic = sélection (conforme à la spécification).
+      el.addEventListener("dblclick", function () {
+        selectionnerDemandeur(d);
+      });
+      resultsBox.appendChild(el);
+    });
+  }
+
+  function selectionnerDemandeur(d) {
+    if (demandeurHidden) demandeurHidden.value = d.id;
+    if (demandeurDisplay) demandeurDisplay.value = d.code + " — " + d.libelle;
+    const modalEl = document.getElementById("demandeurModal");
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.hide();
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      clearTimeout(debounce);
+      const q = searchInput.value.trim();
+      debounce = setTimeout(() => chargerDemandeurs(q), 250);
+    });
+    // Charge la liste complète des demandeurs actifs à l'ouverture de la modale.
+    const modalEl = document.getElementById("demandeurModal");
+    if (modalEl) {
+      modalEl.addEventListener("shown.bs.modal", function () {
+        searchInput.focus();
+        if (!resultsBox.children.length) chargerDemandeurs("");
+      });
+    }
+  }
+
+  // ---- Ouverture automatique du ticket après enregistrement ----
+  const ticketModalEl = document.getElementById("ticketModal");
+  if (ticketModalEl && ticketModalEl.dataset.autoshow === "true") {
+    new bootstrap.Modal(ticketModalEl).show();
+  }
+})();

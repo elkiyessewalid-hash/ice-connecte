@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer un référentiel{% endblock %}
+{% block page_title %}Supprimer un référentiel{% endblock %}
+
+{% block content %}
+<div class="content-card" style="max-width: 560px;">
+    <p>Confirmez-vous la suppression du référentiel <strong>{{ object.code }} — {{ object.nom }}</strong> ?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash me-1"></i> Supprimer</button>
+        <a href="{% url 'referentiel:list' %}" class="btn btn-outline-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

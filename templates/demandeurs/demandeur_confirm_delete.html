@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer un demandeur{% endblock %}
+{% block page_title %}Supprimer un demandeur{% endblock %}
+
+{% block content %}
+<div class="content-card" style="max-width: 560px;">
+    <p>Confirmez-vous la suppression du demandeur <strong>{{ object.libelle }}</strong> ({{ object.code }}) ?</p>
+    <p class="text-muted small">Astuce : si des ventes lui sont rattachées, désactivez-le plutôt que de le supprimer.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash me-1"></i> Supprimer</button>
+        <a href="{% url 'demandeurs:list' %}" class="btn btn-outline-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

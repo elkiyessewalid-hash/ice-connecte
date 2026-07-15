@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+
+{% block content %}
+<div class="content-card" style="max-width: 720px;">
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">{{ form.code|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.nom|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.ville|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.prix_unitaire|as_crispy_field }}</div>
+            <div class="col-md-8">{{ form.logo|as_crispy_field }}</div>
+            <div class="col-md-4 d-flex align-items-end">{{ form.is_active|as_crispy_field }}</div>
+        </div>
+        {% if form.instance.logo %}
+        <div class="mt-2"><small class="text-muted">Logo actuel :</small><br>
+            <img src="{{ form.instance.logo.url }}" style="height:48px;object-fit:contain;"></div>
+        {% endif %}
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-1"></i> Enregistrer</button>
+            <a href="{% url 'referentiel:list' %}" class="btn btn-outline-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

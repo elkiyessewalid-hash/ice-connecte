@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-grad-blue"><i class="fa-solid fa-receipt"></i></div>
+            <div>
+                <div class="stat-value">{{ total_ventes }}</div>
+                <div class="stat-label">Total ventes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-grad-green"><i class="fa-solid fa-weight-hanging"></i></div>
+            <div>
+                <div class="stat-value">{{ quantite_totale|floatformat:2 }} <small class="fs-6 text-muted">Kg</small></div>
+                <div class="stat-label">Quantité totale vendue</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-grad-orange"><i class="fa-solid fa-coins"></i></div>
+            <div>
+                <div class="stat-value">{{ chiffre_affaires|floatformat:2 }} <small class="fs-6 text-muted">DH</small></div>
+                <div class="stat-label">Chiffre d'affaires</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-grad-purple"><i class="fa-solid fa-address-book"></i></div>
+            <div>
+                <div class="stat-value">{{ nombre_demandeurs }}</div>
+                <div class="stat-label">Demandeurs actifs</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="content-card h-100">
+            <h2 class="h6 mb-3">Chiffre d'affaires (6 derniers mois)</h2>
+            <canvas id="chartCA" height="120"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="content-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h6 mb-0">Ventes récentes</h2>
+                <a href="{% url 'ventes:historique' %}" class="btn btn-sm btn-outline-primary">Tout voir</a>
+            </div>
+            {% if ventes_recentes %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Code</th><th>Demandeur</th><th class="text-end">Total</th></tr></thead>
+                    <tbody>
+                    {% for v in ventes_recentes %}
+                        <tr>
+                            <td><a href="{% url 'ventes:ticket' v.pk %}" target="_blank">{{ v.code_vente }}</a></td>
+                            <td>{{ v.demandeur.libelle }}</td>
+                            <td class="text-end">{{ v.prix_total|floatformat:2 }} DH</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">Aucune vente enregistrée pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ chart.labels|json_script:"chart-labels" }}
+{{ chart.valeurs|json_script:"chart-valeurs" }}
+<script>
+(function () {
+    const labels = JSON.parse(document.getElementById("chart-labels").textContent);
+    const valeurs = JSON.parse(document.getElementById("chart-valeurs").textContent);
+    const ctx = document.getElementById("chartCA");
+    if (!ctx) return;
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "CA (DH)",
+                data: valeurs,
+                backgroundColor: "rgba(37, 99, 235, .6)",
+                borderRadius: 6,
+            }],
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } },
+        },
+    });
+})();
+</script>
+{% endblock %}

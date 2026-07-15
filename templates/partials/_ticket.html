@@ -1,0 +1,31 @@
+{% load static %}
+{# Ticket de vente réutilisable. Attend la variable `vente` dans le contexte. #}
+<div class="ticket printable">
+    <div class="ticket-head">
+        <div class="ticket-ref">
+            {% if vente.referentiel.logo %}
+                <img src="{{ vente.referentiel.logo.url }}" alt="{{ vente.referentiel.nom }}">
+            {% else %}
+                <img src="{% static 'img/logo_onp_2024.png' %}" alt="{{ vente.referentiel.nom }}">
+            {% endif %}
+            <div class="ticket-ref-name">{{ vente.referentiel.nom }}</div>
+        </div>
+        <div class="ticket-onp">
+            <img src="{% static 'img/logo_onp_2024.png' %}" alt="ONP">
+        </div>
+    </div>
+
+    <div class="ticket-title">Ticket de vente</div>
+
+    <div class="ticket-row"><span class="k">Code BG</span><span class="v">{{ vente.code_vente }}</span></div>
+    <div class="ticket-row"><span class="k">Demandeur</span><span class="v">{{ vente.demandeur.libelle }}</span></div>
+    <div class="ticket-row"><span class="k">Prix unitaire</span><span class="v">{{ vente.prix_unitaire }} DH/Kg</span></div>
+    <div class="ticket-row"><span class="k">Prix total</span><span class="v">{{ vente.prix_total }} DH</span></div>
+    <div class="ticket-row"><span class="k">Quantité</span><span class="v">{{ vente.quantite }} Kg</span></div>
+    <div class="ticket-row"><span class="k">Date de vente</span><span class="v">{{ vente.date_vente|date:"d/m/Y" }}</span></div>
+
+    <div class="ticket-foot">
+        Merci — {{ vente.utilisateur.get_full_name|default:vente.utilisateur.username }}<br>
+        Office National des Pêches
+    </div>
+</div>

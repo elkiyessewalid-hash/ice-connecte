@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Demandeurs{% endblock %}
+{% block page_title %}Gestion des demandeurs{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Demandeurs</h2>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fa-solid fa-plus me-1"></i> Nouveau demandeur
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'demandeurs:physique_create' %}"><i class="fa-solid fa-user me-2"></i>Personne physique</a></li>
+                <li><a class="dropdown-item" href="{% url 'demandeurs:morale_create' %}"><i class="fa-solid fa-building me-2"></i>Personne morale</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle datatable">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Libellé</th>
+                    <th>Catégorie</th>
+                    <th>Statut</th>
+                    <th>État</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for d in demandeurs %}
+                <tr>
+                    <td><strong>{{ d.code }}</strong></td>
+                    <td>{{ d.libelle }}</td>
+                    <td>
+                        {% if d.categorie == 'PHYSIQUE' %}
+                            <span class="badge bg-primary-subtle text-primary-emphasis"><i class="fa-solid fa-user me-1"></i>Physique</span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis"><i class="fa-solid fa-building me-1"></i>Morale</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ d.get_statut_display }}</td>
+                    <td>
+                        {% if d.is_active %}
+                            <span class="badge bg-success">Actif</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'demandeurs:toggle_active' d.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-{% if d.is_active %}warning{% else %}success{% endif %}"
+                                    title="{% if d.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                <i class="fa-solid fa-power-off"></i>
+                            </button>
+                        </form>
+                        {% if d.categorie == 'PHYSIQUE' %}
+                            <a href="{% url 'demandeurs:physique_update' d.pk %}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                        {% else %}
+                            <a href="{% url 'demandeurs:morale_update' d.pk %}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                        {% endif %}
+                        <form method="post" action="{% url 'demandeurs:delete' d.pk %}" class="d-inline js-confirm-delete" data-nom="{{ d.libelle }}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-muted">Aucun demandeur.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

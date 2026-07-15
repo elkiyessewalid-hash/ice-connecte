@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+
+{% block content %}
+<div class="content-card" style="max-width: 720px;">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">{{ form.username|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.role|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.last_name|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.first_name|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.password1|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.password2|as_crispy_field }}</div>
+            <div class="col-12">{{ form.is_active|as_crispy_field }}</div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-1"></i> Enregistrer</button>
+            <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% load static %}
+{# Barre latérale de navigation, conditionnée par le rôle de l'utilisateur. #}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <img src="{% static 'img/logo_onp_2024.png' %}" alt="ONP" class="sidebar-logo">
+        <div class="sidebar-brand-text">
+            <strong>IceVentes</strong>
+            <span>Blocs de glace</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        {% if role_is_admin %}
+        <a href="{% url 'core:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'core' %}active{% endif %}">
+            <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <a href="{% url 'accounts:user_list' %}" class="nav-link {% if request.resolver_match.namespace == 'accounts' %}active{% endif %}">
+            <i class="fa-solid fa-users-gear"></i> Gestion Utilisateurs
+        </a>
+        <a href="{% url 'referentiel:list' %}" class="nav-link {% if request.resolver_match.namespace == 'referentiel' %}active{% endif %}">
+            <i class="fa-solid fa-list-check"></i> Référentiel
+        </a>
+        <a href="{% url 'demandeurs:list' %}" class="nav-link {% if request.resolver_match.namespace == 'demandeurs' %}active{% endif %}">
+            <i class="fa-solid fa-address-book"></i> Demandeurs
+        </a>
+        {% endif %}
+
+        <a href="{% url 'ventes:nouvelle' %}" class="nav-link {% if request.resolver_match.url_name == 'nouvelle' %}active{% endif %}">
+            <i class="fa-solid fa-cart-plus"></i> Nouvelle Vente
+        </a>
+        <a href="{% url 'ventes:historique' %}" class="nav-link {% if request.resolver_match.url_name == 'historique' %}active{% endif %}">
+            <i class="fa-solid fa-clock-rotate-left"></i> Historique des ventes
+        </a>
+
+        {% if role_is_admin %}
+        <a href="{% url 'admin:index' %}" class="nav-link">
+            <i class="fa-solid fa-gear"></i> Paramètres
+        </a>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+        {% if referentiel_actif %}
+        <div class="ref-badge">
+            <i class="fa-solid fa-circle-check text-success"></i>
+            Réf. actif : <strong>{{ referentiel_actif.code }}</strong>
+            <span>{{ referentiel_actif.prix_unitaire }} DH/Kg</span>
+        </div>
+        {% else %}
+        <div class="ref-badge ref-badge-warning">
+            <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+            Aucun référentiel actif
+        </div>
+        {% endif %}
+        <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-light w-100 mt-2">
+                <i class="fa-solid fa-right-from-bracket me-1"></i> Déconnexion
+            </button>
+        </form>
+    </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>

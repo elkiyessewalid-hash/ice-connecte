@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Référentiel{% endblock %}
+{% block page_title %}Référentiel{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Référentiels</h2>
+        <a href="{% url 'referentiel:create' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus me-1"></i> Nouveau référentiel
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle datatable">
+            <thead>
+                <tr>
+                    <th>Logo</th>
+                    <th>Code</th>
+                    <th>Nom</th>
+                    <th>Ville</th>
+                    <th class="text-end">Prix (DH/Kg)</th>
+                    <th>État</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for r in referentiels %}
+                <tr>
+                    <td>
+                        {% if r.logo %}
+                            <img src="{{ r.logo.url }}" alt="{{ r.code }}" style="height:34px;object-fit:contain;">
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ r.code }}</strong></td>
+                    <td>{{ r.nom }}</td>
+                    <td>{{ r.ville }}</td>
+                    <td class="text-end">{{ r.prix_unitaire }}</td>
+                    <td>
+                        {% if r.is_active %}
+                            <span class="badge bg-success">Actif</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if not r.is_active %}
+                        <form method="post" action="{% url 'referentiel:activate' r.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-success" title="Activer">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{% url 'referentiel:update' r.pk %}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-pen"></i></a>
+                        <form method="post" action="{% url 'referentiel:delete' r.pk %}" class="d-inline js-confirm-delete" data-nom="{{ r.code }}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="text-center text-muted">Aucun référentiel. Créez-en un et activez-le pour pouvoir enregistrer des ventes.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

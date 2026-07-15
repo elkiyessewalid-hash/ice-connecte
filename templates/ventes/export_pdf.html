@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page { size: A4 landscape; margin: 1.5cm; }
+        body { font-family: Helvetica, sans-serif; font-size: 9pt; color: #222; }
+        h1 { font-size: 14pt; margin: 0 0 2px; }
+        .meta { color: #666; font-size: 8pt; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #0d6efd; color: #fff; padding: 5px; text-align: left; font-size: 8pt; }
+        td { padding: 4px 5px; border-bottom: 1px solid #ddd; }
+        .num { text-align: right; }
+    </style>
+</head>
+<body>
+    <h1>Historique des ventes — Blocs de glace</h1>
+    <div class="meta">Généré le {{ genere_le }}</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Code Vente</th>
+                <th>Demandeur</th>
+                <th class="num">Quantité (Kg)</th>
+                <th class="num">Prix Unitaire</th>
+                <th class="num">Prix Total (DH)</th>
+                <th>Date</th>
+                <th>Utilisateur</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for v in ventes %}
+            <tr>
+                <td>{{ v.code_vente }}</td>
+                <td>{{ v.demandeur.libelle }}</td>
+                <td class="num">{{ v.quantite }}</td>
+                <td class="num">{{ v.prix_unitaire }}</td>
+                <td class="num">{{ v.prix_total }}</td>
+                <td>{{ v.date_vente|date:"d/m/Y" }}</td>
+                <td>{{ v.utilisateur.get_full_name|default:v.utilisateur.username }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7">Aucune vente.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
