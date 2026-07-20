@@ -1,19 +1,19 @@
 {% load static %}
 {# Barre latérale de navigation, conditionnée par le rôle de l'utilisateur. #}
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
+    <a href="{% url 'core:dashboard' %}" class="sidebar-brand" style="text-decoration:none;color:inherit;">
         <img src="{% static 'img/logo_onp_2024.png' %}" alt="ONP" class="sidebar-logo">
         <div class="sidebar-brand-text">
             <strong>IceVentes</strong>
             <span>Blocs de glace</span>
         </div>
-    </div>
+    </a>
 
     <nav class="sidebar-nav">
-        {% if role_is_admin %}
         <a href="{% url 'core:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'core' %}active{% endif %}">
-            <i class="fa-solid fa-gauge-high"></i> Dashboard
+            <i class="fa-solid fa-gauge-high"></i> Tableau de bord
         </a>
+        {% if role_is_admin %}
         <a href="{% url 'accounts:user_list' %}" class="nav-link {% if request.resolver_match.namespace == 'accounts' %}active{% endif %}">
             <i class="fa-solid fa-users-gear"></i> Gestion Utilisateurs
         </a>
