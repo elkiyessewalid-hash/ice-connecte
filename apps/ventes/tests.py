@@ -106,3 +106,55 @@ class VenteFlowTests(TestCase):
 
     def test_historique_requiert_connexion(self):
         self.assertEqual(self.client.get(reverse("ventes:historique")).status_code, 302)
+
+
+class HistoriqueListeTests(TestCase):
+    def setUp(self):
+        self.caissier = User.objects.create_user(
+            "caissier", password="p", role=User.Role.CAISSIER
+        )
+        self.ref = Referentiel.objects.create(
+            code="8234", nom="Usine", ville="Agadir",
+            prix_unitaire=Decimal("4.50"), is_active=True,
+        )
+        self.dem = DemandeurPhysique.objects.create(
+            code="DP1", cin="X1", nom="El Amrani", prenom="Youssef",
+            statut=Demandeur.Statut.ACHETEUR, is_active=True,
+        )
+        for i in range(6):
+            v = Vente(
+                demandeur=self.dem, referentiel=self.ref,
+                prix_unitaire=self.ref.prix_unitaire, quantite=Decimal("10"),
+                prix_total=Decimal(100 * (i + 1)),
+            )
+            v.utilisateur = self.caissier
+            v.save()
+        self.client.force_login(self.caissier)
+
+    def test_pagination_5_par_page(self):
+        resp = self.client.get(reverse("ventes:historique"))
+        self.assertEqual(len(resp.context["ventes"]), 5)
+        self.assertTrue(resp.context["is_paginated"])
+
+    def test_filtre_montant(self):
+        # Montants 100..600 ; [300, 500] -> 300, 400, 500 = 3 ventes.
+        resp = self.client.get(
+            reverse("ventes:historique"), {"montant_min": "300", "montant_max": "500"}
+        )
+        self.assertEqual(resp.context["paginator"].count, 3)
+
+    def test_montant_invalide_est_ignore(self):
+        resp = self.client.get(reverse("ventes:historique"), {"montant_min": "abc"})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context["paginator"].count, 6)
+
+    def test_htmx_renvoie_fragment(self):
+        resp = self.client.get(reverse("ventes:historique"), HTTP_HX_REQUEST="true")
+        self.assertNotContains(resp, "<html")
+        self.assertContains(resp, "<table")
+
+    def test_ticket_detail(self):
+        v = Vente.objects.first()
+        resp = self.client.get(reverse("ventes:ticket_detail", args=[v.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, v.code_vente)

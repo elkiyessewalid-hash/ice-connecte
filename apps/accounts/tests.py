@@ -85,3 +85,47 @@ class UserManagementPermissionTests(TestCase):
         u = User.objects.get(username="caissier1")
         self.assertTrue(u.check_password("MotDePasse2026!"))
         self.assertEqual(u.role, User.Role.CAISSIER)
+
+
+class UserListFilterTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user("admin", password="p", role=User.Role.ADMIN)
+        for i in range(6):
+            User.objects.create_user(
+                f"agent{i}", password="p", role=User.Role.AGENT,
+                last_name="Dupont", first_name=f"A{i}",
+            )
+        User.objects.create_user(
+            "cordi", password="p", role=User.Role.CAISSIER,
+            last_name="Zahra", first_name="Nour",
+        )
+        self.client.force_login(self.admin)
+
+    def test_pagination_5_par_page(self):
+        resp = self.client.get(reverse("accounts:user_list"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.context["is_paginated"])
+        self.assertEqual(len(resp.context["utilisateurs"]), 5)
+
+    def test_filtre_par_role(self):
+        resp = self.client.get(reverse("accounts:user_list"), {"role": User.Role.CAISSIER})
+        self.assertEqual(resp.context["paginator"].count, 1)
+
+    def test_filtre_par_etat(self):
+        User.objects.filter(username="agent0").update(is_active=False)
+        resp = self.client.get(reverse("accounts:user_list"), {"etat": "inactif"})
+        self.assertEqual(resp.context["paginator"].count, 1)
+
+    def test_recherche_par_nom(self):
+        resp = self.client.get(reverse("accounts:user_list"), {"q": "Zahra"})
+        self.assertEqual(resp.context["paginator"].count, 1)
+
+    def test_htmx_renvoie_fragment(self):
+        resp = self.client.get(reverse("accounts:user_list"), HTTP_HX_REQUEST="true")
+        self.assertNotContains(resp, "<html")
+        self.assertContains(resp, "<table")
+
+    def test_detail_utilisateur(self):
+        resp = self.client.get(reverse("accounts:user_detail", args=[self.admin.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "admin")

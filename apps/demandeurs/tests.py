@@ -101,3 +101,51 @@ class DemandeurSearchApiTests(TestCase):
     def test_recherche_exige_authentification(self):
         resp = self.client.get(reverse("demandeurs:search"))
         self.assertEqual(resp.status_code, 302)  # redirigé vers login
+
+
+class DemandeurListFilterTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user("admin", password="p", role=User.Role.ADMIN)
+        for i in range(6):
+            DemandeurPhysique.objects.create(
+                code=f"P{i}", cin=f"C{i}", nom="Alaoui", prenom=f"N{i}",
+                statut=Demandeur.Statut.ACHETEUR, is_active=True,
+            )
+        DemandeurMorale.objects.create(
+            code="M1", raison_sociale="Coop Nour", nom_representant="Benali",
+            prenom_representant="Fatima", cin_representant="Z9",
+            statut=Demandeur.Statut.VENDEUR, is_active=False,
+        )
+        self.client.force_login(self.admin)
+
+    def test_pagination_5_par_page(self):
+        resp = self.client.get(reverse("demandeurs:list"))
+        self.assertEqual(len(resp.context["demandeurs"]), 5)
+        self.assertTrue(resp.context["is_paginated"])
+
+    def test_filtre_type_morale(self):
+        resp = self.client.get(reverse("demandeurs:list"), {"categorie": "MORALE"})
+        self.assertEqual(resp.context["paginator"].count, 1)
+
+    def test_filtre_statut_vendeur(self):
+        resp = self.client.get(reverse("demandeurs:list"), {"statut": "VENDEUR"})
+        self.assertEqual(resp.context["paginator"].count, 1)
+
+    def test_filtre_etat_inactif(self):
+        resp = self.client.get(reverse("demandeurs:list"), {"etat": "inactif"})
+        self.assertEqual(resp.context["paginator"].count, 1)
+
+    def test_recherche_par_cin_representant(self):
+        resp = self.client.get(reverse("demandeurs:list"), {"q": "Z9"})
+        self.assertEqual(resp.context["paginator"].count, 1)
+
+    def test_htmx_renvoie_fragment(self):
+        resp = self.client.get(reverse("demandeurs:list"), HTTP_HX_REQUEST="true")
+        self.assertNotContains(resp, "<html")
+        self.assertContains(resp, "<table")
+
+    def test_detail_morale(self):
+        m = DemandeurMorale.objects.get(code="M1")
+        resp = self.client.get(reverse("demandeurs:detail", args=[m.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Coop Nour")

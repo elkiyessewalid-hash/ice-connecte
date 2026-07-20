@@ -1,4 +1,6 @@
 """Vues des ventes : saisie, historique, ticket imprimable et exports."""
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
@@ -84,6 +86,17 @@ class TicketView(LoginRequiredMixin, DetailView):
 # ---------------------------------------------------------------------------
 # Historique + exports
 # ---------------------------------------------------------------------------
+def _to_decimal_or_none(valeur):
+    """Convertit une saisie de montant en Decimal, ou None si vide/invalide."""
+    valeur = (valeur or "").strip()
+    if not valeur:
+        return None
+    try:
+        return Decimal(valeur.replace(",", "."))
+    except InvalidOperation:
+        return None
+
+
 def filtrer_ventes(request):
     """Applique les filtres de la barre d'historique et renvoie le queryset."""
     qs = Vente.objects.select_related("demandeur", "referentiel", "utilisateur").all()
@@ -93,6 +106,8 @@ def filtrer_ventes(request):
     demandeur = request.GET.get("demandeur", "").strip()
     type_dem = request.GET.get("type", "").strip()
     code = request.GET.get("code", "").strip()
+    montant_min = _to_decimal_or_none(request.GET.get("montant_min"))
+    montant_max = _to_decimal_or_none(request.GET.get("montant_max"))
 
     if date_debut:
         qs = qs.filter(date_vente__gte=date_debut)
@@ -106,14 +121,20 @@ def filtrer_ventes(request):
         qs = qs.filter(demandeur__categorie=type_dem)
     if code:
         qs = qs.filter(code_vente__icontains=code)
+    if montant_min is not None:
+        qs = qs.filter(prix_total__gte=montant_min)
+    if montant_max is not None:
+        qs = qs.filter(prix_total__lte=montant_max)
     return qs
 
 
 class HistoriqueVentesView(LoginRequiredMixin, ListView):
-    """Historique des ventes (tous rôles) avec filtres serveur + DataTables."""
+    """Historique des ventes (tous rôles) avec filtres serveur + pagination HTMX."""
 
     template_name = "ventes/historique.html"
+    partial_template_name = "ventes/_vente_table.html"
     context_object_name = "ventes"
+    paginate_by = 5
 
     def get_queryset(self):
         return filtrer_ventes(self.request)
@@ -129,8 +150,26 @@ class HistoriqueVentesView(LoginRequiredMixin, ListView):
             "demandeur": self.request.GET.get("demandeur", ""),
             "type": self.request.GET.get("type", ""),
             "code": self.request.GET.get("code", ""),
+            "montant_min": self.request.GET.get("montant_min", ""),
+            "montant_max": self.request.GET.get("montant_max", ""),
         }
         return ctx
+
+    def get_template_names(self):
+        if self.request.headers.get("HX-Request"):
+            return [self.partial_template_name]
+        return [self.template_name]
+
+
+class TicketDetailView(LoginRequiredMixin, DetailView):
+    """Fragment de consultation d'un ticket, chargé dans la modale générique."""
+
+    model = Vente
+    template_name = "ventes/_ticket_modal.html"
+    context_object_name = "vente"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("demandeur", "referentiel", "utilisateur")
 
 
 class ExportExcelView(LoginRequiredMixin, View):

@@ -12,49 +12,39 @@
         </a>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle datatable">
-            <thead>
-                <tr>
-                    <th>Login</th>
-                    <th>Nom</th>
-                    <th>Prénom</th>
-                    <th>Rôle</th>
-                    <th>Statut</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for u in utilisateurs %}
-                <tr>
-                    <td>{{ u.username }}</td>
-                    <td>{{ u.last_name|default:"—" }}</td>
-                    <td>{{ u.first_name|default:"—" }}</td>
-                    <td><span class="badge bg-info-subtle text-info-emphasis">{{ u.get_role_display }}</span></td>
-                    <td>
-                        {% if u.is_active %}
-                            <span class="badge bg-success-subtle text-success-emphasis">Actif</span>
-                        {% else %}
-                            <span class="badge bg-secondary-subtle text-secondary-emphasis">Inactif</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end">
-                        <a href="{% url 'accounts:user_update' u.pk %}" class="btn btn-sm btn-outline-primary">
-                            <i class="fa-solid fa-pen"></i>
-                        </a>
-                        {% if u != request.user %}
-                        <form method="post" action="{% url 'accounts:user_delete' u.pk %}" class="d-inline js-confirm-delete" data-nom="{{ u.username }}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-            {% empty %}
-                <tr><td colspan="6" class="text-center text-muted">Aucun utilisateur.</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
+    <form class="row g-2 align-items-end mb-3"
+          hx-get="{% url 'accounts:user_list' %}"
+          hx-target="#user-results" hx-push-url="true"
+          hx-trigger="submit, change, keyup changed delay:400ms">
+        <div class="col-12 col-md-5">
+            <label class="form-label small">Recherche</label>
+            <input type="search" name="q" value="{{ filtres.q }}" class="form-control form-control-sm"
+                   placeholder="Login, nom ou prénom…" autocomplete="off">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small">Profil</label>
+            <select name="role" class="form-select form-select-sm">
+                <option value="">Tous</option>
+                {% for value, label in roles %}
+                    <option value="{{ value }}" {% if filtres.role == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small">État</label>
+            <select name="etat" class="form-select form-select-sm">
+                <option value="">Tous</option>
+                <option value="actif" {% if filtres.etat == 'actif' %}selected{% endif %}>Actif</option>
+                <option value="inactif" {% if filtres.etat == 'inactif' %}selected{% endif %}>Désactivé</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-1 d-grid">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+    </form>
+
+    <div id="user-results">
+        {% include "accounts/_user_table.html" %}
     </div>
 </div>
 {% endblock %}

@@ -1,10 +1,10 @@
 """Vues des demandeurs : CRUD (Admin) + activation/désactivation."""
 from django.contrib import messages
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.accounts.mixins import AdminRequiredMixin
 
@@ -15,15 +15,68 @@ from .models import Demandeur, DemandeurMorale, DemandeurPhysique
 class DemandeurListView(AdminRequiredMixin, ListView):
     model = Demandeur
     template_name = "demandeurs/demandeur_list.html"
+    partial_template_name = "demandeurs/_demandeur_table.html"
     context_object_name = "demandeurs"
-    paginate_by = 25
+    paginate_by = 5
 
     def get_queryset(self):
         qs = super().get_queryset()
         categorie = self.request.GET.get("categorie", "").strip()
         if categorie in Demandeur.Categorie.values:
             qs = qs.filter(categorie=categorie)
-        return qs
+        statut = self.request.GET.get("statut", "").strip()
+        if statut in Demandeur.Statut.values:
+            qs = qs.filter(statut=statut)
+        etat = self.request.GET.get("etat", "").strip()
+        if etat == "actif":
+            qs = qs.filter(is_active=True)
+        elif etat == "inactif":
+            qs = qs.filter(is_active=False)
+        recherche = self.request.GET.get("q", "").strip()
+        if recherche:
+            # Recherche sur code + libellé (nom/prénom/raison sociale) + CIN des
+            # deux sous-tables (physique.cin, morale.cin_representant).
+            qs = qs.filter(
+                Q(code__icontains=recherche)
+                | Q(libelle__icontains=recherche)
+                | Q(demandeurphysique__cin__icontains=recherche)
+                | Q(demandeurmorale__cin_representant__icontains=recherche)
+            )
+        return qs.distinct()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["categories"] = Demandeur.Categorie.choices
+        ctx["statuts"] = Demandeur.Statut.choices
+        ctx["filtres"] = {
+            "q": self.request.GET.get("q", ""),
+            "categorie": self.request.GET.get("categorie", ""),
+            "statut": self.request.GET.get("statut", ""),
+            "etat": self.request.GET.get("etat", ""),
+        }
+        return ctx
+
+    def get_template_names(self):
+        if self.request.headers.get("HX-Request"):
+            return [self.partial_template_name]
+        return [self.template_name]
+
+
+class DemandeurDetailView(AdminRequiredMixin, DetailView):
+    """Fragment de consultation d'un demandeur (physique ou morale) pour la modale."""
+
+    model = Demandeur
+    template_name = "demandeurs/_demandeur_detail.html"
+    context_object_name = "demandeur"
+
+    def get_object(self, queryset=None):
+        # Renvoie l'instance concrète du sous-type pour exposer tous ses champs.
+        obj = super().get_object(queryset)
+        if obj.categorie == Demandeur.Categorie.PHYSIQUE:
+            return getattr(obj, "demandeurphysique", obj)
+        if obj.categorie == Demandeur.Categorie.MORALE:
+            return getattr(obj, "demandeurmorale", obj)
+        return obj
 
 
 # --- Personne physique -----------------------------------------------------

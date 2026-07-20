@@ -54,8 +54,21 @@
     </div>
 </div>
 
+{# Modale générique : les vues « Consulter » y injectent leur fragment via HTMX. #}
+<div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" id="appModalContent">
+            <div class="modal-body text-center py-5 text-muted">
+                <i class="fa-solid fa-spinner fa-spin me-2"></i> Chargement…
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- jQuery (requis par DataTables) -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- HTMX (pagination et modales sans rechargement complet) -->
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
 <!-- Bootstrap 5 bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- DataTables -->
@@ -67,6 +80,18 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <!-- JS applicatif commun -->
 <script src="{% static 'js/app.js' %}"></script>
+<script>
+    // Réinitialise la modale générique à sa fermeture (évite un contenu obsolète).
+    (function () {
+        var modal = document.getElementById("appModal");
+        if (!modal) return;
+        var spinner = '<div class="modal-body text-center py-5 text-muted">' +
+            '<i class="fa-solid fa-spinner fa-spin me-2"></i> Chargement…</div>';
+        modal.addEventListener("hidden.bs.modal", function () {
+            document.getElementById("appModalContent").innerHTML = spinner;
+        });
+    })();
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

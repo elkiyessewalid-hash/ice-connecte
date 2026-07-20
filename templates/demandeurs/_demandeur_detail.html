@@ -1,0 +1,40 @@
+{% comment %}Fragment de consultation d'un demandeur (injecté dans #appModalContent).{% endcomment %}
+<div class="modal-header">
+    <h5 class="modal-title">
+        {% if demandeur.categorie == 'PHYSIQUE' %}<i class="fa-solid fa-user me-2"></i>{% else %}<i class="fa-solid fa-building me-2"></i>{% endif %}
+        {{ demandeur.libelle }}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+</div>
+<div class="modal-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-4">Code</dt><dd class="col-sm-8">{{ demandeur.code }}</dd>
+        <dt class="col-sm-4">Catégorie</dt><dd class="col-sm-8">{{ demandeur.get_categorie_display }}</dd>
+        <dt class="col-sm-4">Statut</dt><dd class="col-sm-8">{{ demandeur.get_statut_display }}</dd>
+        {% if demandeur.categorie == 'PHYSIQUE' %}
+            <dt class="col-sm-4">Nom</dt><dd class="col-sm-8">{{ demandeur.nom }}</dd>
+            <dt class="col-sm-4">Prénom</dt><dd class="col-sm-8">{{ demandeur.prenom }}</dd>
+            <dt class="col-sm-4">CIN</dt><dd class="col-sm-8">{{ demandeur.cin }}</dd>
+        {% else %}
+            <dt class="col-sm-4">Raison sociale</dt><dd class="col-sm-8">{{ demandeur.raison_sociale }}</dd>
+            <dt class="col-sm-4">Représentant</dt><dd class="col-sm-8">{{ demandeur.nom_representant }} {{ demandeur.prenom_representant }}</dd>
+            <dt class="col-sm-4">CIN représentant</dt><dd class="col-sm-8">{{ demandeur.cin_representant }}</dd>
+        {% endif %}
+        <dt class="col-sm-4">État</dt>
+        <dd class="col-sm-8">
+            {% if demandeur.is_active %}
+                <span class="badge bg-success">Actif</span>
+            {% else %}
+                <span class="badge bg-secondary">Désactivé</span>
+            {% endif %}
+        </dd>
+    </dl>
+</div>
+<div class="modal-footer">
+    {% if demandeur.categorie == 'PHYSIQUE' %}
+        <a href="{% url 'demandeurs:physique_update' demandeur.pk %}" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen me-1"></i>Modifier</a>
+    {% else %}
+        <a href="{% url 'demandeurs:morale_update' demandeur.pk %}" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen me-1"></i>Modifier</a>
+    {% endif %}
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+</div>

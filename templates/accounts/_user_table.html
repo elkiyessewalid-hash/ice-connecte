@@ -1,0 +1,51 @@
+{% comment %}Fragment : tableau des utilisateurs + pagination (rendu seul en HTMX).{% endcomment %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr>
+                <th>Login</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Rôle</th>
+                <th>Statut</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for u in utilisateurs %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.last_name|default:"—" }}</td>
+                <td>{{ u.first_name|default:"—" }}</td>
+                <td><span class="badge bg-info-subtle text-info-emphasis">{{ u.get_role_display }}</span></td>
+                <td>
+                    {% if u.is_active %}
+                        <span class="badge bg-success-subtle text-success-emphasis">Actif</span>
+                    {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis">Inactif</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            hx-get="{% url 'accounts:user_detail' u.pk %}"
+                            hx-target="#appModalContent"
+                            data-bs-toggle="modal" data-bs-target="#appModal"
+                            title="Consulter"><i class="fa-solid fa-eye"></i></button>
+                    <a href="{% url 'accounts:user_update' u.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                        <i class="fa-solid fa-pen"></i>
+                    </a>
+                    {% if u != request.user %}
+                    <form method="post" action="{% url 'accounts:user_delete' u.pk %}" class="d-inline js-confirm-delete" data-nom="{{ u.username }}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="text-center text-muted py-4">Aucun utilisateur ne correspond.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "partials/_pagination.html" with target="#user-results" %}
