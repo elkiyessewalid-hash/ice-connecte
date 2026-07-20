@@ -158,3 +158,13 @@ class HistoriqueListeTests(TestCase):
         resp = self.client.get(reverse("ventes:ticket_detail", args=[v.pk]))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, v.code_vente)
+
+    def test_ticket_page_deux_exemplaires(self):
+        # Le ticket imprimable présente deux exemplaires sur une page A4.
+        v = Vente.objects.first()
+        resp = self.client.get(reverse("ventes:ticket", args=[v.pk]))
+        self.assertContains(resp, "ticket-sheet")
+        # Deux cartes ticket (deux exemplaires) sur la même page.
+        self.assertContains(resp, 'class="ticket-title"', count=2)
+        self.assertContains(resp, "Exemplaire 1")
+        self.assertContains(resp, "Exemplaire 2")

@@ -53,6 +53,10 @@ class AuthenticationTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "incorrect")
 
+    def test_login_page_a_le_toggle_mot_de_passe(self):
+        resp = self.client.get(reverse("accounts:login"))
+        self.assertContains(resp, "toggleReady")
+
 
 class UserManagementPermissionTests(TestCase):
     def setUp(self):
@@ -129,3 +133,40 @@ class UserListFilterTests(TestCase):
         resp = self.client.get(reverse("accounts:user_detail", args=[self.admin.pk]))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "admin")
+
+
+class UserFieldConstraintTests(TestCase):
+    """Longueurs maximales : login 30, nom/prénom 25, mot de passe 20."""
+
+    def _data(self, **over):
+        data = {
+            "username": "u1", "last_name": "Nom", "first_name": "Prenom",
+            "role": User.Role.CAISSIER, "is_active": True,
+            "password1": "MotDePasse2026!", "password2": "MotDePasse2026!",
+        }
+        data.update(over)
+        return data
+
+    def test_login_max_30(self):
+        from apps.accounts.forms import UserCreateForm
+        f = UserCreateForm(data=self._data(username="a" * 31))
+        self.assertFalse(f.is_valid())
+        self.assertIn("username", f.errors)
+
+    def test_nom_max_25(self):
+        from apps.accounts.forms import UserCreateForm
+        f = UserCreateForm(data=self._data(last_name="N" * 26))
+        self.assertFalse(f.is_valid())
+        self.assertIn("last_name", f.errors)
+
+    def test_password_max_20(self):
+        from apps.accounts.forms import UserCreateForm
+        pw = "Ab1!" + "x" * 20  # 24 caractères
+        f = UserCreateForm(data=self._data(password1=pw, password2=pw))
+        self.assertFalse(f.is_valid())
+        self.assertIn("password1", f.errors)
+
+    def test_valeurs_valides(self):
+        from apps.accounts.forms import UserCreateForm
+        f = UserCreateForm(data=self._data())
+        self.assertTrue(f.is_valid(), f.errors)

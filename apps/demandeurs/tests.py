@@ -72,6 +72,11 @@ class CinUniquenessTests(TestCase):
         form = DemandeurPhysiqueForm(data=self._data_physique(cin="ZZ999"))
         self.assertTrue(form.is_valid(), form.errors)
 
+    def test_code_max_10(self):
+        form = DemandeurPhysiqueForm(data=self._data_physique(code="X" * 11, cin="NEW1"))
+        self.assertFalse(form.is_valid())
+        self.assertIn("code", form.errors)
+
 
 class DemandeurSearchApiTests(TestCase):
     def setUp(self):

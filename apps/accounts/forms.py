@@ -64,10 +64,12 @@ class UserCreateForm(_BaseUserForm):
 
     password1 = forms.CharField(
         label="Mot de passe",
+        max_length=20,
         widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
     )
     password2 = forms.CharField(
         label="Confirmer le mot de passe",
+        max_length=20,
         widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
     )
 
@@ -97,12 +99,14 @@ class UserUpdateForm(_BaseUserForm):
     password1 = forms.CharField(
         label="Nouveau mot de passe",
         required=False,
+        max_length=20,
         widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
         help_text="Laisser vide pour conserver le mot de passe actuel.",
     )
     password2 = forms.CharField(
         label="Confirmer le mot de passe",
         required=False,
+        max_length=20,
         widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
     )
 

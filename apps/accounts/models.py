@@ -1,5 +1,6 @@
 """Modèle utilisateur personnalisé avec gestion des rôles métier."""
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
 
@@ -8,12 +9,23 @@ class User(AbstractUser):
     Utilisateur de l'application.
 
     On réutilise les champs standards de Django :
-      - ``username``   -> le « Login »
-      - ``first_name`` -> le « Prénom »
-      - ``last_name``  -> le « Nom »
+      - ``username``   -> le « Login »   (30 caractères max)
+      - ``first_name`` -> le « Prénom »  (25 caractères max)
+      - ``last_name``  -> le « Nom »     (25 caractères max)
       - ``password``   -> haché automatiquement par Django
     et on ajoute un champ ``role`` qui pilote les permissions métier.
     """
+
+    username = models.CharField(
+        "Login",
+        max_length=30,
+        unique=True,
+        validators=[UnicodeUsernameValidator()],
+        error_messages={"unique": "Un utilisateur avec ce login existe déjà."},
+        help_text="30 caractères maximum.",
+    )
+    first_name = models.CharField("Prénom", max_length=25, blank=True)
+    last_name = models.CharField("Nom", max_length=25, blank=True)
 
     class Role(models.TextChoices):
         ADMIN = "ADMIN", "Admin"

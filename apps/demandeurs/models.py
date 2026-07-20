@@ -21,7 +21,7 @@ class Demandeur(models.Model):
         PHYSIQUE = "PHYSIQUE", "Personne physique"
         MORALE = "MORALE", "Personne morale"
 
-    code = models.CharField("Code", max_length=30, unique=True)
+    code = models.CharField("Code", max_length=10, unique=True)
     statut = models.CharField("Statut", max_length=10, choices=Statut.choices)
     categorie = models.CharField("Catégorie", max_length=10, choices=Categorie.choices)
     # Libellé lisible, recalculé depuis le sous-type à chaque enregistrement.
