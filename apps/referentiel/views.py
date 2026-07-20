@@ -1,5 +1,6 @@
 """CRUD du référentiel (réservé au rôle Admin) + action d'activation."""
 from django.contrib import messages
+from django.db.models import ProtectedError
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
@@ -24,7 +25,21 @@ class ReferentielCreateView(AdminRequiredMixin, CreateView):
     template_name = "referentiel/referentiel_form.html"
     success_url = reverse_lazy("referentiel:list")
 
+    def dispatch(self, request, *args, **kwargs):
+        # Règle métier : un seul référentiel, pas de création multiple.
+        existant = Referentiel.objects.first()
+        if existant is not None and request.user.is_authenticated:
+            messages.info(
+                request,
+                "Un référentiel existe déjà : il n'est pas possible d'en créer un "
+                "second. Vous pouvez le modifier.",
+            )
+            return redirect("referentiel:update", pk=existant.pk)
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
+        # Le référentiel unique est toujours actif (source de prix des ventes).
+        form.instance.is_active = True
         messages.success(self.request, "Référentiel créé avec succès.")
         return super().form_valid(form)
 
@@ -56,8 +71,17 @@ class ReferentielDeleteView(AdminRequiredMixin, DeleteView):
     success_url = reverse_lazy("referentiel:list")
 
     def form_valid(self, form):
+        try:
+            response = super().form_valid(form)
+        except ProtectedError:
+            messages.error(
+                self.request,
+                "Impossible de supprimer ce référentiel : des ventes y sont "
+                "rattachées. L'historique doit rester tarifé.",
+            )
+            return redirect(self.success_url)
         messages.success(self.request, "Référentiel supprimé.")
-        return super().form_valid(form)
+        return response
 
 
 class ReferentielActivateView(AdminRequiredMixin, View):

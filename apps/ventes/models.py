@@ -6,20 +6,32 @@ from django.utils import timezone
 
 class SequenceCounter(models.Model):
     """
-    Compteur de séquence par année, garantissant un numéro de vente unique et
-    croissant même en cas d'accès concurrents (verrouillage via select_for_update
-    dans le service de génération de code).
+    Compteur de séquence par (année, référentiel) : garantit un numéro de vente
+    unique et croissant, qui redémarre à 1 pour chaque référentiel et chaque
+    année (verrouillage via select_for_update dans le service de génération).
     """
 
-    annee = models.PositiveIntegerField("Année", unique=True)
+    annee = models.PositiveIntegerField("Année")
+    referentiel = models.ForeignKey(
+        "referentiel.Referentiel",
+        on_delete=models.CASCADE,
+        related_name="compteurs",
+        verbose_name="Référentiel",
+    )
     dernier_numero = models.PositiveIntegerField("Dernier numéro", default=0)
 
     class Meta:
         verbose_name = "Compteur de séquence"
         verbose_name_plural = "Compteurs de séquence"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["annee", "referentiel"],
+                name="uniq_compteur_annee_referentiel",
+            )
+        ]
 
     def __str__(self):
-        return f"{self.annee} → {self.dernier_numero}"
+        return f"{self.referentiel_id}/{self.annee} → {self.dernier_numero}"
 
 
 class Vente(models.Model):

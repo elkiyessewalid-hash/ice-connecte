@@ -6,7 +6,8 @@ Format du code (décision D2) :
 Exemple :
     BG_8234/26 00001
 où AA = 2 derniers chiffres de l'année et NNNNN = séquence à 5 chiffres,
-incrémentée par année.
+incrémentée par (année, référentiel) : chaque référentiel possède sa propre
+numérotation annuelle qui redémarre à 1 chaque année.
 """
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
@@ -28,7 +29,9 @@ def generate_code_vente(referentiel, date_vente=None) -> str:
     annee = date_vente.year
 
     with transaction.atomic():
-        compteur, _ = SequenceCounter.objects.select_for_update().get_or_create(annee=annee)
+        compteur, _ = SequenceCounter.objects.select_for_update().get_or_create(
+            annee=annee, referentiel=referentiel
+        )
         compteur.dernier_numero += 1
         compteur.save(update_fields=["dernier_numero"])
         numero = compteur.dernier_numero
@@ -45,7 +48,7 @@ def peek_prochain_code(referentiel, date_vente=None) -> str:
     """
     date_vente = date_vente or timezone.localdate()
     annee = date_vente.year
-    compteur = SequenceCounter.objects.filter(annee=annee).first()
+    compteur = SequenceCounter.objects.filter(annee=annee, referentiel=referentiel).first()
     prochain = (compteur.dernier_numero if compteur else 0) + 1
     code_ref = referentiel.code if referentiel else "----"
     aa = f"{annee % 100:02d}"

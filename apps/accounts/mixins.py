@@ -38,3 +38,12 @@ class AdminRequiredMixin(RoleRequiredMixin):
     """Réservé au rôle Admin (gestion des utilisateurs, référentiel, demandeurs)."""
 
     allowed_roles = (User.Role.ADMIN,)
+
+
+class VenteCreateRequiredMixin(RoleRequiredMixin):
+    """
+    Création de ventes : réservée à l'Admin et au Caissier.
+    L'Agent est en lecture seule (il ne peut que consulter l'historique).
+    """
+
+    allowed_roles = (User.Role.ADMIN, User.Role.CAISSIER)

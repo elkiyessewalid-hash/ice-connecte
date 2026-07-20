@@ -54,5 +54,8 @@ class User(AbstractUser):
         """Nom d'URL de la page d'accueil selon le rôle (redirection post-login)."""
         if self.is_admin:
             return "core:dashboard"
-        # Agent & Caissier arrivent directement sur la saisie de vente.
-        return "ventes:nouvelle"
+        if self.is_caissier:
+            # Le caissier peut créer des ventes : il arrive sur la saisie.
+            return "ventes:nouvelle"
+        # L'agent est en lecture seule : il arrive sur l'historique.
+        return "ventes:historique"

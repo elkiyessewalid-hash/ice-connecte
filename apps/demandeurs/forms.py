@@ -8,6 +8,23 @@ _TEXT = forms.TextInput(attrs={"class": "form-control"})
 _SELECT = forms.Select(attrs={"class": "form-select"})
 _CHECK = forms.CheckboxInput(attrs={"class": "form-check-input"})
 
+_CIN_DEJA_UTILISE = "Ce CIN est déjà utilisé par un autre demandeur."
+
+
+def _cin_deja_pris(cin, *, exclure_physique=None, exclure_morale=None) -> bool:
+    """
+    Vrai si ``cin`` existe déjà, que ce soit comme CIN d'une personne physique
+    ou comme CIN du représentant d'une personne morale. L'unicité du CIN est
+    ainsi garantie **à travers les deux tables** (physique + morale).
+    """
+    physiques = DemandeurPhysique.objects.filter(cin=cin)
+    morales = DemandeurMorale.objects.filter(cin_representant=cin)
+    if exclure_physique is not None:
+        physiques = physiques.exclude(pk=exclure_physique)
+    if exclure_morale is not None:
+        morales = morales.exclude(pk=exclure_morale)
+    return physiques.exists() or morales.exists()
+
 
 class DemandeurPhysiqueForm(forms.ModelForm):
     class Meta:
@@ -22,6 +39,12 @@ class DemandeurPhysiqueForm(forms.ModelForm):
             "statut": forms.Select(attrs={"class": "form-select"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
+
+    def clean_cin(self):
+        cin = (self.cleaned_data.get("cin") or "").strip()
+        if cin and _cin_deja_pris(cin, exclure_physique=self.instance.pk):
+            raise forms.ValidationError(_CIN_DEJA_UTILISE)
+        return cin
 
 
 class DemandeurMoraleForm(forms.ModelForm):
@@ -45,3 +68,9 @@ class DemandeurMoraleForm(forms.ModelForm):
             "statut": forms.Select(attrs={"class": "form-select"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
+
+    def clean_cin_representant(self):
+        cin = (self.cleaned_data.get("cin_representant") or "").strip()
+        if cin and _cin_deja_pris(cin, exclure_morale=self.instance.pk):
+            raise forms.ValidationError(_CIN_DEJA_UTILISE)
+        return cin

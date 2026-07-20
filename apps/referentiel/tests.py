@@ -2,6 +2,9 @@
 from decimal import Decimal
 
 from django.test import TestCase
+from django.urls import reverse
+
+from apps.accounts.models import User
 
 from .models import Referentiel
 
@@ -27,3 +30,42 @@ class ReferentielActifTests(TestCase):
             code="A1", nom="Un", ville="Agadir", prix_unitaire=Decimal("4.50"), is_active=True
         )
         self.assertEqual(Referentiel.get_active(), r)
+
+    def test_reactivation_si_unique_desactive(self):
+        # Un référentiel unique désactivé par erreur est automatiquement réactivé.
+        r = Referentiel.objects.create(
+            code="A1", nom="Un", ville="Agadir", prix_unitaire=Decimal("4.50"), is_active=True
+        )
+        r.is_active = False
+        r.save()
+        r.refresh_from_db()
+        self.assertTrue(r.is_active)
+
+
+class ReferentielSingletonViewTests(TestCase):
+    """Règle métier : un seul référentiel, toujours actif (côté vues)."""
+
+    def setUp(self):
+        self.admin = User.objects.create_user("admin", password="p", role=User.Role.ADMIN)
+        self.client.force_login(self.admin)
+
+    def test_creation_bloquee_si_referentiel_existe(self):
+        existant = Referentiel.objects.create(
+            code="A1", nom="Un", ville="Agadir", prix_unitaire=Decimal("4.50")
+        )
+        resp = self.client.get(reverse("referentiel:create"))
+        # Redirigé vers la modification de l'existant : pas de second référentiel.
+        self.assertRedirects(resp, reverse("referentiel:update", args=[existant.pk]))
+        self.assertEqual(Referentiel.objects.count(), 1)
+
+    def test_referentiel_cree_est_toujours_actif(self):
+        # Même si is_active=False est soumis, le référentiel unique est forcé actif.
+        self.client.post(
+            reverse("referentiel:create"),
+            {
+                "code": "A1", "nom": "Un", "ville": "Agadir",
+                "prix_unitaire": "4.50", "is_active": False,
+            },
+        )
+        self.assertEqual(Referentiel.objects.count(), 1)
+        self.assertTrue(Referentiel.objects.first().is_active)

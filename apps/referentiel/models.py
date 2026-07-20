@@ -18,7 +18,7 @@ class Referentiel(models.Model):
     logo = models.ImageField(
         "Logo", upload_to="referentiels/", blank=True, null=True
     )
-    is_active = models.BooleanField("Actif", default=False)
+    is_active = models.BooleanField("Actif", default=True)
 
     created_at = models.DateTimeField("Créé le", auto_now_add=True)
     updated_at = models.DateTimeField("Modifié le", auto_now=True)
@@ -33,8 +33,11 @@ class Referentiel(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Garantit l'unicité de l'actif : si ce référentiel est marqué actif,
-        tous les autres sont désactivés au sein de la même transaction.
+        Garantit qu'il existe toujours **exactement un** référentiel actif :
+          - si celui-ci est marqué actif, tous les autres sont désactivés ;
+          - s'il est marqué inactif alors qu'aucun autre n'est actif, on le
+            réactive (un référentiel doit toujours alimenter les ventes en prix).
+        Le tout dans une seule transaction.
         """
         with transaction.atomic():
             super().save(*args, **kwargs)
@@ -42,6 +45,9 @@ class Referentiel(models.Model):
                 Referentiel.objects.exclude(pk=self.pk).filter(is_active=True).update(
                     is_active=False
                 )
+            elif not Referentiel.objects.filter(is_active=True).exists():
+                Referentiel.objects.filter(pk=self.pk).update(is_active=True)
+                self.is_active = True
 
     @classmethod
     def get_active(cls):

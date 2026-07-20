@@ -1,12 +1,14 @@
 """Vues des ventes : saisie, historique, ticket imprimable et exports."""
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView
 
+from apps.accounts.mixins import VenteCreateRequiredMixin
 from apps.referentiel.models import Referentiel
 
 from .exports import export_ventes_excel, export_ventes_pdf
@@ -18,9 +20,10 @@ from .services import peek_prochain_code
 # ---------------------------------------------------------------------------
 # Saisie d'une nouvelle vente
 # ---------------------------------------------------------------------------
-class NouvelleVenteView(LoginRequiredMixin, CreateView):
+class NouvelleVenteView(VenteCreateRequiredMixin, CreateView):
     """
-    Écran « Nouvelle Vente ». Accessible aux trois rôles.
+    Écran « Nouvelle Vente ». Réservé à l'Admin et au Caissier ; l'Agent est
+    en lecture seule (consultation de l'historique uniquement).
     Le prix unitaire et le référentiel proviennent du référentiel actif ;
     la quantité est recalculée côté serveur (Prix total / Prix unitaire).
     """
@@ -49,12 +52,16 @@ class NouvelleVenteView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         referentiel = form.referentiel_actif  # garanti non nul par le form.clean()
-        vente = form.save(commit=False)
-        vente.referentiel = referentiel
-        vente.prix_unitaire = referentiel.prix_unitaire
-        vente.quantite = form.cleaned_data["quantite"]
-        vente.utilisateur = self.request.user
-        vente.save()  # attribue le code_vente
+        # L'incrément du compteur (dans Vente.save -> generate_code_vente) et
+        # l'insertion de la vente doivent former une seule unité atomique :
+        # si l'insertion échoue, le numéro annuel réservé est libéré.
+        with transaction.atomic():
+            vente = form.save(commit=False)
+            vente.referentiel = referentiel
+            vente.prix_unitaire = referentiel.prix_unitaire
+            vente.quantite = form.cleaned_data["quantite"]
+            vente.utilisateur = self.request.user
+            vente.save()  # attribue le code_vente
         messages.success(self.request, f"Vente {vente.code_vente} enregistrée.")
         # Redirige vers le formulaire en demandant l'ouverture du ticket.
         return redirect(f"{reverse('ventes:nouvelle')}?ticket={vente.pk}")

@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from apps.accounts.models import User
 
+from .forms import DemandeurMoraleForm, DemandeurPhysiqueForm
 from .models import Demandeur, DemandeurMorale, DemandeurPhysique
 
 
@@ -24,6 +25,52 @@ class DemandeurModelTests(TestCase):
         )
         self.assertEqual(d.categorie, Demandeur.Categorie.MORALE)
         self.assertEqual(d.libelle, "Coop Baraka")
+
+
+class CinUniquenessTests(TestCase):
+    """Le CIN doit être unique à travers les deux tables (physique + morale)."""
+
+    def _data_morale(self, **over):
+        data = {
+            "code": "DM1", "raison_sociale": "Coop Baraka",
+            "nom_representant": "Benali", "prenom_representant": "Fatima",
+            "cin_representant": "AA123", "statut": Demandeur.Statut.VENDEUR,
+            "is_active": True,
+        }
+        data.update(over)
+        return data
+
+    def _data_physique(self, **over):
+        data = {
+            "code": "DP1", "cin": "AA123", "nom": "El Amrani",
+            "prenom": "Youssef", "statut": Demandeur.Statut.ACHETEUR,
+            "is_active": True,
+        }
+        data.update(over)
+        return data
+
+    def test_cin_morale_en_conflit_avec_physique(self):
+        DemandeurPhysique.objects.create(
+            code="DPX", cin="AA123", nom="El Amrani", prenom="Youssef",
+            statut=Demandeur.Statut.ACHETEUR,
+        )
+        form = DemandeurMoraleForm(data=self._data_morale(cin_representant="AA123"))
+        self.assertFalse(form.is_valid())
+        self.assertIn("cin_representant", form.errors)
+
+    def test_cin_physique_en_conflit_avec_morale(self):
+        DemandeurMorale.objects.create(
+            code="DMX", raison_sociale="Coop", nom_representant="B",
+            prenom_representant="F", cin_representant="BB456",
+            statut=Demandeur.Statut.VENDEUR,
+        )
+        form = DemandeurPhysiqueForm(data=self._data_physique(cin="BB456"))
+        self.assertFalse(form.is_valid())
+        self.assertIn("cin", form.errors)
+
+    def test_cin_unique_est_valide(self):
+        form = DemandeurPhysiqueForm(data=self._data_physique(cin="ZZ999"))
+        self.assertTrue(form.is_valid(), form.errors)
 
 
 class DemandeurSearchApiTests(TestCase):

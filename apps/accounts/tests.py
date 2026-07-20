@@ -13,6 +13,9 @@ class AuthenticationTests(TestCase):
         self.agent = User.objects.create_user(
             "agent", password="Agent2026!", role=User.Role.AGENT
         )
+        self.caissier = User.objects.create_user(
+            "caissier", password="Caissier2026!", role=User.Role.CAISSIER
+        )
 
     def test_mot_de_passe_hache(self):
         """Le mot de passe ne doit jamais être stocké en clair."""
@@ -26,10 +29,19 @@ class AuthenticationTests(TestCase):
         )
         self.assertRedirects(resp, reverse("core:dashboard"))
 
-    def test_login_redirige_agent_vers_nouvelle_vente(self):
+    def test_login_redirige_agent_vers_historique(self):
+        # L'agent est en lecture seule : il arrive sur l'historique, pas la saisie.
         resp = self.client.post(
             reverse("accounts:login"),
             {"username": "agent", "password": "Agent2026!"},
+        )
+        self.assertRedirects(resp, reverse("ventes:historique"))
+
+    def test_login_redirige_caissier_vers_nouvelle_vente(self):
+        # Le caissier peut créer des ventes : il arrive sur la saisie.
+        resp = self.client.post(
+            reverse("accounts:login"),
+            {"username": "caissier", "password": "Caissier2026!"},
         )
         self.assertRedirects(resp, reverse("ventes:nouvelle"))
 
