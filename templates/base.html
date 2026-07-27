@@ -13,7 +13,7 @@
     <!-- DataTables (Bootstrap 5) -->
     <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- Feuille de style applicative -->
-    <link href="{% static 'css/app.css' %}" rel="stylesheet">
+    <link href="{% static 'css/app.css' %}?v=1" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -90,6 +90,17 @@
         modal.addEventListener("hidden.bs.modal", function () {
             document.getElementById("appModalContent").innerHTML = spinner;
         });
+        // Erreur HTMX (403/500/réseau) lors du chargement d'un fragment de modale.
+        function showModalError(evt) {
+            var t = evt.detail && evt.detail.target;
+            if (t && t.id === "appModalContent") {
+                t.innerHTML = '<div class="modal-body text-center py-4 text-danger">' +
+                    '<i class="fa-solid fa-triangle-exclamation me-2"></i>' +
+                    'Impossible de charger le contenu.</div>';
+            }
+        }
+        document.body.addEventListener("htmx:responseError", showModalError);
+        document.body.addEventListener("htmx:sendError", showModalError);
     })();
 </script>
 {% block extra_js %}{% endblock %}

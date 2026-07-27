@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.dateparse import parse_date
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView
 
@@ -101,13 +102,21 @@ def filtrer_ventes(request):
     """Applique les filtres de la barre d'historique et renvoie le queryset."""
     qs = Vente.objects.select_related("demandeur", "referentiel", "utilisateur").all()
 
-    date_debut = request.GET.get("date_debut", "").strip()
-    date_fin = request.GET.get("date_fin", "").strip()
+    # Dates analysées de façon sûre : une saisie invalide est ignorée (pas de 500).
+    date_debut = parse_date(request.GET.get("date_debut", "").strip())
+    date_fin = parse_date(request.GET.get("date_fin", "").strip())
     demandeur = request.GET.get("demandeur", "").strip()
     type_dem = request.GET.get("type", "").strip()
     code = request.GET.get("code", "").strip()
     montant_min = _to_decimal_or_none(request.GET.get("montant_min"))
     montant_max = _to_decimal_or_none(request.GET.get("montant_max"))
+    # Ignore les montants négatifs et corrige un intervalle inversé.
+    if montant_min is not None and montant_min < 0:
+        montant_min = None
+    if montant_max is not None and montant_max < 0:
+        montant_max = None
+    if montant_min is not None and montant_max is not None and montant_min > montant_max:
+        montant_min, montant_max = montant_max, montant_min
 
     if date_debut:
         qs = qs.filter(date_vente__gte=date_debut)

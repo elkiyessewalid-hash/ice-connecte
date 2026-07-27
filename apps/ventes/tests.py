@@ -123,6 +123,16 @@ class VenteFlowTests(TestCase):
         # Le formulaire est invalide (pas de référentiel actif) -> pas de vente créée.
         self.assertEqual(Vente.objects.count(), 0)
 
+    def test_montant_hors_limites_refuse(self):
+        # Un montant démesuré est refusé proprement (pas d'erreur DB / 500).
+        self.client.force_login(self.caissier)
+        resp = self.client.post(
+            reverse("ventes:nouvelle"),
+            {"demandeur": self.demandeur.pk, "prix_total": "1000000000000", "date_vente": "2026-07-15"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(Vente.objects.count(), 0)
+
     def test_date_vente_future_refusee(self):
         from datetime import timedelta
         self.client.force_login(self.caissier)
@@ -186,6 +196,22 @@ class HistoriqueListeTests(TestCase):
         resp = self.client.get(reverse("ventes:historique"), {"montant_min": "abc"})
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.context["paginator"].count, 6)
+
+    def test_filtres_invalides_ne_plantent_pas(self):
+        # Date illisible + montants négatifs : ignorés, aucun 500.
+        resp = self.client.get(
+            reverse("ventes:historique"),
+            {"date_debut": "pas-une-date", "montant_min": "-5", "montant_max": "xyz"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context["paginator"].count, 6)
+
+    def test_montant_intervalle_inverse_corrige(self):
+        # min=500, max=300 -> corrigé en 300..500 -> 300, 400, 500 = 3 ventes.
+        resp = self.client.get(
+            reverse("ventes:historique"), {"montant_min": "500", "montant_max": "300"}
+        )
+        self.assertEqual(resp.context["paginator"].count, 3)
 
     def test_htmx_renvoie_fragment(self):
         resp = self.client.get(reverse("ventes:historique"), HTTP_HX_REQUEST="true")

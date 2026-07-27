@@ -62,7 +62,7 @@ class Vente(models.Model):
     )
     quantite = models.DecimalField("Quantité (Kg)", max_digits=12, decimal_places=3)
     prix_total = models.DecimalField("Prix total (DH)", max_digits=14, decimal_places=2)
-    date_vente = models.DateField("Date de vente", default=timezone.localdate)
+    date_vente = models.DateField("Date de vente", default=timezone.localdate, db_index=True)
     utilisateur = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

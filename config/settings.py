@@ -27,10 +27,8 @@ if env_file.exists():
 # Sécurité de base
 # ---------------------------------------------------------------------------
 # SECRET_KEY : valeur de dev par défaut, à surcharger via .env en production.
-SECRET_KEY = env(
-    "SECRET_KEY",
-    default="django-insecure-dev-key-change-me-in-production-0000000000000000",
-)
+_DEV_SECRET_KEY = "django-insecure-dev-key-change-me-in-production-0000000000000000"
+SECRET_KEY = env("SECRET_KEY", default=_DEV_SECRET_KEY)
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
@@ -189,6 +187,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Sécurité renforcée en production (DEBUG=False)
 # ---------------------------------------------------------------------------
 if not DEBUG:
+    # Échec au démarrage si les secrets de production n'ont pas été surchargés.
+    from django.core.exceptions import ImproperlyConfigured
+
+    if SECRET_KEY == _DEV_SECRET_KEY:
+        raise ImproperlyConfigured(
+            "SECRET_KEY doit être défini via l'environnement (.env) en production."
+        )
+    if ALLOWED_HOSTS == ["127.0.0.1", "localhost"]:
+        raise ImproperlyConfigured(
+            "ALLOWED_HOSTS doit être défini via l'environnement (.env) en production."
+        )
+
     SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

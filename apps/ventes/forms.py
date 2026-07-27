@@ -96,4 +96,8 @@ class VenteForm(forms.ModelForm):
             raise forms.ValidationError(
                 "Saisissez un prix total ou une quantité (valeur strictement positive)."
             )
+        # Garde-fou : les montants doivent tenir dans les colonnes DB
+        # (prix_total < 10^12, quantité < 10^9).
+        if cleaned.get("prix_total", 0) >= 10**12 or cleaned.get("quantite", 0) >= 10**9:
+            raise forms.ValidationError("Montant ou quantité hors des limites autorisées.")
         return cleaned

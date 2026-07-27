@@ -1,7 +1,11 @@
 """Formulaire du référentiel."""
 from django import forms
+from django.core.files.uploadedfile import UploadedFile
 
 from .models import Referentiel
+
+_LOGO_MAX_OCTETS = 2 * 1024 * 1024  # 2 Mo
+_LOGO_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 
 class ReferentielForm(forms.ModelForm):
@@ -24,3 +28,16 @@ class ReferentielForm(forms.ModelForm):
         if prix is not None and prix <= 0:
             raise forms.ValidationError("Le prix unitaire doit être strictement positif.")
         return prix
+
+    def clean_logo(self):
+        logo = self.cleaned_data.get("logo")
+        # On ne valide que les nouveaux fichiers téléversés (pas le fichier existant).
+        if isinstance(logo, UploadedFile):
+            if logo.size > _LOGO_MAX_OCTETS:
+                raise forms.ValidationError("Le logo ne doit pas dépasser 2 Mo.")
+            extension = logo.name.rsplit(".", 1)[-1].lower() if "." in logo.name else ""
+            if extension not in _LOGO_EXTENSIONS:
+                raise forms.ValidationError(
+                    "Format non autorisé. Utilisez png, jpg, jpeg, gif ou webp (pas de SVG)."
+                )
+        return logo
