@@ -4,6 +4,13 @@
 (function () {
   "use strict";
 
+  // Échappe le HTML pour éviter toute injection (XSS) dans les contenus dynamiques.
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
   // ---- Sidebar repliable (mobile) ----
   const sidebar = document.getElementById("sidebar");
   const toggle = document.getElementById("sidebarToggle");
@@ -44,7 +51,7 @@
       const nom = form.dataset.nom || "cet élément";
       Swal.fire({
         title: "Confirmer la suppression ?",
-        html: "Vous êtes sur le point de supprimer <strong>" + nom + "</strong>.",
+        html: "Vous êtes sur le point de supprimer <strong>" + escapeHtml(nom) + "</strong>.",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#dc3545",

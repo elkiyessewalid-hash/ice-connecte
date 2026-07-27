@@ -4,6 +4,13 @@
 (function () {
   "use strict";
 
+  // Échappe le HTML pour éviter toute injection (XSS) lors des rendus innerHTML.
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
   const form = document.getElementById("venteForm");
   if (!form) return;
 
@@ -74,8 +81,8 @@
       el.className = "list-group-item list-group-item-action";
       el.innerHTML =
         '<div class="d-flex justify-content-between">' +
-        '<span><strong>' + d.code + "</strong> — " + d.libelle + "</span>" +
-        '<span class="badge bg-light text-dark">' + d.categorie + " · " + d.statut + "</span>" +
+        '<span><strong>' + esc(d.code) + "</strong> — " + esc(d.libelle) + "</span>" +
+        '<span class="badge bg-light text-dark">' + esc(d.categorie) + " · " + esc(d.statut) + "</span>" +
         "</div>";
       // Clic simple = sélection (plus rapide qu'un double-clic).
       el.addEventListener("click", function () {
