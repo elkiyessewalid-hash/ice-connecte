@@ -16,17 +16,28 @@ COLONNES = [
 ]
 
 
+def _safe_txt(value) -> str:
+    """
+    Neutralise l'injection de formule (CSV/Excel) : une valeur texte commençant
+    par = + - @ (ou tab/retour) est préfixée d'une apostrophe pour rester du texte.
+    """
+    text = "" if value is None else str(value)
+    if text[:1] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + text
+    return text
+
+
 def _lignes(queryset):
     """Transforme un queryset de ventes en lignes prêtes pour l'export."""
     for v in queryset:
         yield [
-            v.code_vente,
-            v.demandeur.libelle,
+            _safe_txt(v.code_vente),
+            _safe_txt(v.demandeur.libelle),
             float(v.quantite),
             float(v.prix_unitaire),
             float(v.prix_total),
             v.date_vente.strftime("%d/%m/%Y"),
-            v.utilisateur.get_full_name() or v.utilisateur.username,
+            _safe_txt(v.utilisateur.get_full_name() or v.utilisateur.username),
         ]
 
 

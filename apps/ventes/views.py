@@ -172,15 +172,15 @@ class TicketDetailView(LoginRequiredMixin, DetailView):
         return super().get_queryset().select_related("demandeur", "referentiel", "utilisateur")
 
 
-class ExportExcelView(LoginRequiredMixin, View):
-    """Export Excel de l'historique filtré."""
+class ExportExcelView(VenteCreateRequiredMixin, View):
+    """Export Excel de l'historique filtré (Admin + Caissier ; pas l'Agent)."""
 
     def get(self, request, *args, **kwargs):
         return export_ventes_excel(filtrer_ventes(request))
 
 
-class ExportPdfView(LoginRequiredMixin, View):
-    """Export PDF de l'historique filtré."""
+class ExportPdfView(VenteCreateRequiredMixin, View):
+    """Export PDF de l'historique filtré (Admin + Caissier ; pas l'Agent)."""
 
     def get(self, request, *args, **kwargs):
         return export_ventes_pdf(filtrer_ventes(request))

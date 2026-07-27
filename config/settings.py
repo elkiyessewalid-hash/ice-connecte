@@ -49,6 +49,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
+    "axes",  # protection anti-force-brute sur la connexion
 ]
 
 LOCAL_APPS = [
@@ -70,6 +71,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # AxesMiddleware doit rester en dernier (django-axes).
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -111,6 +114,12 @@ DATABASES = {
 # Authentification / redirections
 # ---------------------------------------------------------------------------
 AUTH_USER_MODEL = "accounts.User"
+
+# django-axes : le backend Axes doit précéder le backend d'authentification standard.
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "core:dashboard"
@@ -189,6 +198,16 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     X_FRAME_OPTIONS = "DENY"
+
+# ---------------------------------------------------------------------------
+# Protection anti-force-brute (django-axes)
+# ---------------------------------------------------------------------------
+AXES_FAILURE_LIMIT = 5  # tentatives échouées avant verrouillage
+AXES_COOLOFF_TIME = 1  # heure(s) avant réinitialisation automatique du verrou
+AXES_LOCKOUT_PARAMETERS = [["ip_address", "username"]]  # verrou par couple IP + login
+AXES_RESET_ON_SUCCESS = True
+AXES_HTTP_RESPONSE_CODE = 403
+AXES_HANDLER = "axes.handlers.database.AxesDatabaseHandler"
 
 # ---------------------------------------------------------------------------
 # Journalisation

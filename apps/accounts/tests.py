@@ -57,6 +57,17 @@ class AuthenticationTests(TestCase):
         resp = self.client.get(reverse("accounts:login"))
         self.assertContains(resp, "toggleReady")
 
+    def test_verrouillage_apres_echecs_repetes(self):
+        # django-axes : 5 échecs verrouillent ; la 6e tentative (même correcte) est refusée.
+        for _ in range(5):
+            self.client.post(
+                reverse("accounts:login"), {"username": "admin", "password": "faux"}
+            )
+        resp = self.client.post(
+            reverse("accounts:login"), {"username": "admin", "password": "Admin2026!"}
+        )
+        self.assertEqual(resp.status_code, 403)
+
 
 class UserManagementPermissionTests(TestCase):
     def setUp(self):

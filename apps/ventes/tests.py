@@ -48,6 +48,14 @@ class ServiceTests(TestCase):
         self.assertEqual(calc_quantite(Decimal("900"), Decimal("4.50")), Decimal("200.000"))
         self.assertEqual(calc_quantite(Decimal("900"), Decimal("0")), Decimal("0"))
 
+    def test_safe_txt_neutralise_formule_excel(self):
+        from apps.ventes.exports import _safe_txt
+        self.assertEqual(_safe_txt("=SUM(A1:A9)"), "'=SUM(A1:A9)")
+        self.assertEqual(_safe_txt("+1+1"), "'+1+1")
+        self.assertEqual(_safe_txt("@cmd"), "'@cmd")
+        self.assertEqual(_safe_txt("BG_8234/26 00001"), "BG_8234/26 00001")
+        self.assertEqual(_safe_txt("Coopérative Al Baraka"), "Coopérative Al Baraka")
+
 
 class VenteFlowTests(TestCase):
     def setUp(self):
@@ -126,10 +134,14 @@ class VenteFlowTests(TestCase):
         self.assertEqual(resp.status_code, 200)  # réaffiche le formulaire invalide
         self.assertEqual(Vente.objects.count(), 0)
 
-    def test_exports_accessibles(self):
-        self.client.force_login(self.agent)
+    def test_exports_reserves_admin_caissier(self):
+        # Le caissier peut exporter ; l'agent (lecture seule) est refusé (403).
+        self.client.force_login(self.caissier)
         self.assertEqual(self.client.get(reverse("ventes:export_excel")).status_code, 200)
         self.assertEqual(self.client.get(reverse("ventes:export_pdf")).status_code, 200)
+        self.client.force_login(self.agent)
+        self.assertEqual(self.client.get(reverse("ventes:export_excel")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("ventes:export_pdf")).status_code, 403)
 
     def test_historique_requiert_connexion(self):
         self.assertEqual(self.client.get(reverse("ventes:historique")).status_code, 302)

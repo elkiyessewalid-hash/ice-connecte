@@ -2,6 +2,7 @@
 # Cœur
 Django==5.2.4
 django-environ==0.12.0          # configuration via variables d'environnement (.env)
+django-axes==8.3.1              # protection anti-force-brute sur la connexion
 
 # Base de données
 psycopg2-binary==2.9.10         # driver PostgreSQL (repli SQLite automatique si absent)
