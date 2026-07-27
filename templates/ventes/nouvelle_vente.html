@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static l10n %}
 
 {% block title %}Nouvelle vente{% endblock %}
 {% block page_title %}Nouvelle vente{% endblock %}
@@ -15,8 +15,10 @@
 <div class="content-card" style="max-width: 760px;">
     <form method="post" id="venteForm" novalidate
           data-search-url="{% url 'demandeurs:search' %}"
-          data-prix-unitaire="{% if referentiel_actif %}{{ referentiel_actif.prix_unitaire }}{% else %}0{% endif %}">
+          data-prix-unitaire="{% if referentiel_actif %}{{ referentiel_actif.prix_unitaire|unlocalize }}{% else %}0{% endif %}">
         {% csrf_token %}
+        {# Indique quel champ l'utilisateur a piloté (prix total ou quantité). #}
+        <input type="hidden" name="saisie" id="id_saisie" value="total">
 
         {% if form.non_field_errors %}
         <div class="alert alert-danger">{{ form.non_field_errors }}</div>
@@ -58,17 +60,25 @@
                        value="{% if referentiel_actif %}{{ referentiel_actif.prix_unitaire }}{% else %}—{% endif %}" readonly>
             </div>
 
-            <!-- Prix total (saisi) -->
+            <!-- Prix total (saisissable) -->
             <div class="col-md-4">
                 <label class="form-label" for="id_prix_total">Prix total (DH)</label>
                 {{ form.prix_total }}
                 {% for e in form.prix_total.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
             </div>
 
-            <!-- Quantité (auto) -->
+            <!-- Quantité (saisissable, liée au prix total) -->
             <div class="col-md-4">
-                <label class="form-label">Quantité (Kg)</label>
-                <input type="text" class="form-control" id="quantiteAffichee" readonly placeholder="0.000">
+                <label class="form-label" for="id_quantite">Quantité (Kg)</label>
+                {{ form.quantite }}
+                {% for e in form.quantite.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div class="col-12">
+                <div class="form-text">
+                    Saisissez le <strong>prix total</strong> ou la <strong>quantité</strong> :
+                    l'autre valeur se calcule automatiquement à partir du prix unitaire.
+                </div>
             </div>
         </div>
 
@@ -92,7 +102,7 @@
             <div class="modal-body">
                 <input type="text" class="form-control mb-3" id="demandeurSearch"
                        placeholder="Rechercher par code ou nom…" autocomplete="off">
-                <p class="text-muted small mb-2">Double-cliquez sur une ligne pour sélectionner.</p>
+                <p class="text-muted small mb-2">Cliquez sur une ligne pour la sélectionner.</p>
                 <div class="list-group" id="demandeurResults"></div>
             </div>
         </div>
@@ -126,5 +136,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/vente.js' %}"></script>
+<script src="{% static 'js/vente.js' %}?v=3"></script>
 {% endblock %}

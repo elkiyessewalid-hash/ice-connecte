@@ -43,6 +43,13 @@
             <input type="number" step="0.01" min="0" name="montant_max" value="{{ filtres.montant_max }}" class="form-control form-control-sm" placeholder="∞">
         </div>
     </form>
+    {% if request.GET %}
+    <div class="text-end mt-2">
+        <a href="{% url 'ventes:historique' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fa-solid fa-xmark me-1"></i> Réinitialiser les filtres
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 <div class="content-card">

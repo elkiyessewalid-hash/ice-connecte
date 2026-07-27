@@ -78,6 +78,22 @@ class VenteFlowTests(TestCase):
         self.assertEqual(vente.prix_unitaire, Decimal("4.50"))
         self.assertEqual(vente.utilisateur, self.caissier)
 
+    def test_creation_vente_par_quantite(self):
+        # Saisie « quantité d'abord » : le prix total est calculé (qté × prix unitaire).
+        self.client.force_login(self.caissier)
+        resp = self.client.post(
+            reverse("ventes:nouvelle"),
+            {
+                "demandeur": self.demandeur.pk, "quantite": "200",
+                "saisie": "quantite", "date_vente": "2026-07-15",
+            },
+        )
+        self.assertEqual(resp.status_code, 302)
+        vente = Vente.objects.latest("id")
+        self.assertEqual(vente.quantite, Decimal("200.000"))
+        self.assertEqual(vente.prix_total, Decimal("900.00"))  # 200 × 4,50
+        self.assertEqual(vente.prix_unitaire, Decimal("4.50"))
+
     def test_agent_ne_peut_pas_creer_vente(self):
         # L'agent est en lecture seule : la saisie lui est interdite (403).
         self.client.force_login(self.agent)

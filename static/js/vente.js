@@ -7,26 +7,41 @@
   const form = document.getElementById("venteForm");
   if (!form) return;
 
-  const prixUnitaire = parseFloat(form.dataset.prixUnitaire || "0");
+  // Tolère un séparateur décimal virgule (locale FR) en plus du point.
+  const prixUnitaire = parseFloat((form.dataset.prixUnitaire || "0").replace(",", "."));
   const searchUrl = form.dataset.searchUrl;
 
   const prixTotalInput = document.getElementById("id_prix_total");
-  const quantiteAffichee = document.getElementById("quantiteAffichee");
+  const quantiteInput = document.getElementById("id_quantite");
+  const saisieInput = document.getElementById("id_saisie");
   const demandeurHidden = document.getElementById("id_demandeur");
   const demandeurDisplay = document.getElementById("demandeurDisplay");
 
-  // ---- Calcul live : Qté (Kg) = Prix total / Prix unitaire ----
-  function recalculerQuantite() {
+  // ---- Calcul live bidirectionnel ----
+  // Qté (Kg) = Prix total / Prix unitaire  ·  Prix total (DH) = Qté × Prix unitaire.
+  // Affecter .value par programme ne déclenche pas l'évènement "input" : pas de boucle.
+  function depuisPrixTotal() {
+    if (saisieInput) saisieInput.value = "total";
     const total = parseFloat(prixTotalInput.value);
     if (!prixUnitaire || isNaN(total) || total <= 0) {
-      quantiteAffichee.value = "";
+      quantiteInput.value = "";
       return;
     }
-    quantiteAffichee.value = (total / prixUnitaire).toFixed(3);
+    quantiteInput.value = (total / prixUnitaire).toFixed(3);
   }
-  if (prixTotalInput) {
-    prixTotalInput.addEventListener("input", recalculerQuantite);
-    recalculerQuantite(); // au cas où le champ est pré-rempli
+  function depuisQuantite() {
+    if (saisieInput) saisieInput.value = "quantite";
+    const qte = parseFloat(quantiteInput.value);
+    if (!prixUnitaire || isNaN(qte) || qte <= 0) {
+      prixTotalInput.value = "";
+      return;
+    }
+    prixTotalInput.value = (qte * prixUnitaire).toFixed(2);
+  }
+  if (prixTotalInput && quantiteInput) {
+    prixTotalInput.addEventListener("input", depuisPrixTotal);
+    quantiteInput.addEventListener("input", depuisQuantite);
+    if (prixTotalInput.value) depuisPrixTotal(); // champ éventuellement pré-rempli
   }
 
   // ---- Recherche de demandeurs (modale) ----
@@ -62,8 +77,8 @@
         '<span><strong>' + d.code + "</strong> — " + d.libelle + "</span>" +
         '<span class="badge bg-light text-dark">' + d.categorie + " · " + d.statut + "</span>" +
         "</div>";
-      // Double-clic = sélection (conforme à la spécification).
-      el.addEventListener("dblclick", function () {
+      // Clic simple = sélection (plus rapide qu'un double-clic).
+      el.addEventListener("click", function () {
         selectionnerDemandeur(d);
       });
       resultsBox.appendChild(el);
