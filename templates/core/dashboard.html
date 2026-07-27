@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load formatage %}
 
 {% block title %}Tableau de bord{% endblock %}
 {% block page_title %}Tableau de bord{% endblock %}
@@ -31,7 +32,7 @@
         <div class="stat-card">
             <div class="stat-icon bg-grad-blue"><i class="fa-solid fa-receipt"></i></div>
             <div>
-                <div class="stat-value">{{ total_ventes }}</div>
+                <div class="stat-value" title="{{ total_ventes }} ventes">{{ total_ventes|compact }}</div>
                 <div class="stat-label">Total ventes</div>
             </div>
         </div>
@@ -40,7 +41,7 @@
         <div class="stat-card">
             <div class="stat-icon bg-grad-green"><i class="fa-solid fa-weight-hanging"></i></div>
             <div>
-                <div class="stat-value">{{ quantite_totale|floatformat:2 }} <small class="fs-6 text-muted">Kg</small></div>
+                <div class="stat-value" title="{{ quantite_totale|floatformat:2 }} Kg">{{ quantite_totale|compact }} <small class="fs-6 text-muted">Kg</small></div>
                 <div class="stat-label">Quantité totale vendue</div>
             </div>
         </div>
@@ -49,7 +50,7 @@
         <div class="stat-card">
             <div class="stat-icon bg-grad-orange"><i class="fa-solid fa-coins"></i></div>
             <div>
-                <div class="stat-value">{{ chiffre_affaires|floatformat:2 }} <small class="fs-6 text-muted">DH</small></div>
+                <div class="stat-value" title="{{ chiffre_affaires|floatformat:2 }} DH">{{ chiffre_affaires|compact }} <small class="fs-6 text-muted">DH</small></div>
                 <div class="stat-label">Chiffre d'affaires</div>
             </div>
         </div>
@@ -58,7 +59,7 @@
         <div class="stat-card">
             <div class="stat-icon bg-grad-purple"><i class="fa-solid fa-address-book"></i></div>
             <div>
-                <div class="stat-value">{{ nombre_demandeurs }}</div>
+                <div class="stat-value" title="{{ nombre_demandeurs }} demandeurs actifs">{{ nombre_demandeurs|compact }}</div>
                 <div class="stat-label">Demandeurs actifs</div>
             </div>
         </div>

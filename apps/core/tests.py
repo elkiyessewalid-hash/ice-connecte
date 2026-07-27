@@ -1,8 +1,18 @@
 """Tests du tableau de bord (accessible à tous les rôles authentifiés)."""
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from apps.accounts.models import User
+
+
+class CompactFilterTests(SimpleTestCase):
+    def test_compact(self):
+        from apps.core.templatetags.formatage import compact
+        self.assertEqual(compact(300), "300")
+        self.assertEqual(compact(1000), "1 K")
+        self.assertEqual(compact(744962.50), "745 K")
+        self.assertEqual(compact(1500000), "1,5 M")
+        self.assertEqual(compact("x"), "x")  # non numérique -> inchangé
 
 
 class DashboardAccessTests(TestCase):
