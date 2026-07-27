@@ -12,8 +12,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <!-- DataTables (Bootstrap 5) -->
     <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Flatpickr (sélecteur de date personnalisé, format jj/mm/aaaa) -->
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
     <!-- Feuille de style applicative -->
-    <link href="{% static 'css/app.css' %}?v=1" rel="stylesheet">
+    <link href="{% static 'css/app.css' %}?v=2" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -78,8 +80,11 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<!-- Flatpickr + locale FR (sélecteur de date jj/mm/aaaa) -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/fr.js"></script>
 <!-- JS applicatif commun -->
-<script src="{% static 'js/app.js' %}?v=1"></script>
+<script src="{% static 'js/app.js' %}?v=2"></script>
 <script>
     // Réinitialise la modale générique à sa fermeture (évite un contenu obsolète).
     (function () {

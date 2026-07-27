@@ -122,6 +122,9 @@ body {
 
 .content-card { background:#fff; border:1px solid #eef1f6; border-radius:14px; padding:1.25rem; }
 
+/* Champ date personnalisé (flatpickr) : largeur lisible */
+.js-datealt { min-width: 150px; }
+
 /* ---------- Page de connexion ---------- */
 .login-page {
     min-height: 100vh;

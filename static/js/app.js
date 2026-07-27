@@ -29,6 +29,19 @@
   if (toggle) toggle.addEventListener("click", openSidebar);
   if (backdrop) backdrop.addEventListener("click", closeSidebar);
 
+  // ---- Sélecteur de date personnalisé (flatpickr) au format jj/mm/aaaa ----
+  // L'utilisateur voit jj/mm/aaaa ; le serveur reçoit toujours de l'ISO (Y-m-d).
+  if (window.flatpickr) {
+    if (flatpickr.l10ns && flatpickr.l10ns.fr) flatpickr.localize(flatpickr.l10ns.fr);
+    flatpickr('input[type="date"], input.js-date', {
+      altInput: true,
+      altFormat: "d/m/Y",
+      dateFormat: "Y-m-d",
+      altInputClass: "form-control form-control-sm js-datealt",
+      allowInput: true,
+    });
+  }
+
   // ---- Initialisation DataTables (tables .datatable) ----
   if (window.jQuery && jQuery.fn.dataTable) {
     jQuery(".datatable").each(function () {
