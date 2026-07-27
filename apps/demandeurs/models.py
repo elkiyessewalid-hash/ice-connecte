@@ -61,6 +61,7 @@ class DemandeurPhysique(Demandeur):
 
     def save(self, *args, **kwargs):
         self.categorie = Demandeur.Categorie.PHYSIQUE
+        self.cin = (self.cin or "").strip().upper()  # normalisation (unicité CIN)
         self.libelle = self.compute_libelle()
         super().save(*args, **kwargs)
 
@@ -71,7 +72,7 @@ class DemandeurMorale(Demandeur):
     raison_sociale = models.CharField("Raison sociale", max_length=200)
     nom_representant = models.CharField("Nom du représentant", max_length=100)
     prenom_representant = models.CharField("Prénom du représentant", max_length=100)
-    cin_representant = models.CharField("CIN du représentant", max_length=20)
+    cin_representant = models.CharField("CIN du représentant", max_length=20, unique=True)
 
     class Meta:
         verbose_name = "Demandeur — personne morale"
@@ -82,5 +83,6 @@ class DemandeurMorale(Demandeur):
 
     def save(self, *args, **kwargs):
         self.categorie = Demandeur.Categorie.MORALE
+        self.cin_representant = (self.cin_representant or "").strip().upper()  # normalisation
         self.libelle = self.compute_libelle()
         super().save(*args, **kwargs)

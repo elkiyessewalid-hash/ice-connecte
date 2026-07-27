@@ -61,6 +61,14 @@ class VenteForm(forms.ModelForm):
         if not self.initial.get("date_vente"):
             self.initial["date_vente"] = timezone.localdate()
 
+    def clean_date_vente(self):
+        # Interdit les dates futures : elles fausseraient l'ordre et la
+        # numérotation annuelle des ventes.
+        date_vente = self.cleaned_data.get("date_vente")
+        if date_vente and date_vente > timezone.localdate():
+            raise forms.ValidationError("La date de vente ne peut pas être dans le futur.")
+        return date_vente
+
     def clean(self):
         cleaned = super().clean()
         # Le référentiel actif est indispensable pour tarifer la vente.

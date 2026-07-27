@@ -115,6 +115,17 @@ class VenteFlowTests(TestCase):
         # Le formulaire est invalide (pas de référentiel actif) -> pas de vente créée.
         self.assertEqual(Vente.objects.count(), 0)
 
+    def test_date_vente_future_refusee(self):
+        from datetime import timedelta
+        self.client.force_login(self.caissier)
+        future = (timezone.localdate() + timedelta(days=5)).isoformat()
+        resp = self.client.post(
+            reverse("ventes:nouvelle"),
+            {"demandeur": self.demandeur.pk, "prix_total": "900", "date_vente": future},
+        )
+        self.assertEqual(resp.status_code, 200)  # réaffiche le formulaire invalide
+        self.assertEqual(Vente.objects.count(), 0)
+
     def test_exports_accessibles(self):
         self.client.force_login(self.agent)
         self.assertEqual(self.client.get(reverse("ventes:export_excel")).status_code, 200)

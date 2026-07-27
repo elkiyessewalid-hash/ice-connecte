@@ -27,27 +27,39 @@ class Referentiel(models.Model):
         verbose_name = "Référentiel"
         verbose_name_plural = "Référentiels"
         ordering = ["-is_active", "nom"]
+        constraints = [
+            # Au niveau base de données : au plus un référentiel actif.
+            models.UniqueConstraint(
+                fields=["is_active"],
+                condition=models.Q(is_active=True),
+                name="uniq_referentiel_actif",
+            )
+        ]
 
     def __str__(self):
         return f"{self.code} — {self.nom}"
 
     def save(self, *args, **kwargs):
         """
-        Garantit qu'il existe toujours **exactement un** référentiel actif :
-          - si celui-ci est marqué actif, tous les autres sont désactivés ;
-          - s'il est marqué inactif alors qu'aucun autre n'est actif, on le
-            réactive (un référentiel doit toujours alimenter les ventes en prix).
-        Le tout dans une seule transaction.
+        Garantit qu'il existe **exactement un** référentiel actif :
+          - si celui-ci est marqué actif, on désactive les autres AVANT de
+            l'enregistrer (pour ne jamais violer la contrainte DB pendant l'écriture) ;
+          - s'il finit inactif alors qu'aucun autre n'est actif, on le réactive
+            (un référentiel doit toujours alimenter les ventes en prix).
+        Les lignes sont verrouillées (select_for_update) pour être sûr en concurrence.
         """
         with transaction.atomic():
-            super().save(*args, **kwargs)
             if self.is_active:
-                Referentiel.objects.exclude(pk=self.pk).filter(is_active=True).update(
-                    is_active=False
+                (
+                    Referentiel.objects.select_for_update()
+                    .filter(is_active=True)
+                    .exclude(pk=self.pk)
+                    .update(is_active=False)
                 )
-            elif not Referentiel.objects.filter(is_active=True).exists():
-                Referentiel.objects.filter(pk=self.pk).update(is_active=True)
+            super().save(*args, **kwargs)
+            if not self.is_active and not Referentiel.objects.filter(is_active=True).exists():
                 self.is_active = True
+                super().save(update_fields=["is_active"])
 
     @classmethod
     def get_active(cls):

@@ -77,6 +77,21 @@ class CinUniquenessTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("code", form.errors)
 
+    def test_cin_normalise_en_majuscules(self):
+        d = DemandeurPhysique.objects.create(
+            code="DPN", cin="ab12", nom="X", prenom="Y", statut=Demandeur.Statut.ACHETEUR,
+        )
+        d.refresh_from_db()
+        self.assertEqual(d.cin, "AB12")
+
+    def test_cin_conflit_insensible_a_la_casse(self):
+        DemandeurPhysique.objects.create(
+            code="DPZ", cin="AB12", nom="X", prenom="Y", statut=Demandeur.Statut.ACHETEUR,
+        )
+        form = DemandeurMoraleForm(data=self._data_morale(cin_representant="ab12"))
+        self.assertFalse(form.is_valid())
+        self.assertIn("cin_representant", form.errors)
+
 
 class DemandeurSearchApiTests(TestCase):
     def setUp(self):

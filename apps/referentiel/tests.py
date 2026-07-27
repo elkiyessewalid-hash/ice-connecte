@@ -41,6 +41,19 @@ class ReferentielActifTests(TestCase):
         r.refresh_from_db()
         self.assertTrue(r.is_active)
 
+    def test_contrainte_db_un_seul_actif(self):
+        # La contrainte DB rejette deux référentiels actifs (même en contournant save()).
+        from django.db import IntegrityError, transaction
+        Referentiel.objects.create(
+            code="A1", nom="Un", ville="Agadir", prix_unitaire=Decimal("4.50"), is_active=True
+        )
+        r2 = Referentiel.objects.create(
+            code="A2", nom="Deux", ville="Safi", prix_unitaire=Decimal("5.00"), is_active=False
+        )
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Referentiel.objects.filter(pk=r2.pk).update(is_active=True)
+
 
 class ReferentielSingletonViewTests(TestCase):
     """Règle métier : un seul référentiel, toujours actif (côté vues)."""
