@@ -137,6 +137,8 @@ LANGUAGE_CODE = "fr-fr"
 TIME_ZONE = "Africa/Casablanca"
 USE_I18N = True
 USE_TZ = True
+# Séparateur de milliers (fr : espace insécable) sur les nombres localisés.
+USE_THOUSAND_SEPARATOR = True
 
 # ---------------------------------------------------------------------------
 # Fichiers statiques & médias

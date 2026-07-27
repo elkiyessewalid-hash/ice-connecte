@@ -49,7 +49,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ctx["nombre_demandeurs"] = Demandeur.objects.filter(is_active=True).count()
 
         ctx["ventes_recentes"] = (
-            ventes.select_related("demandeur", "utilisateur").order_by("-date_vente", "-id")[:10]
+            ventes.select_related("demandeur", "utilisateur").order_by("-date_vente", "-id")[:8]
         )
 
         # Données pour le graphique : chiffre d'affaires des 6 derniers mois.
