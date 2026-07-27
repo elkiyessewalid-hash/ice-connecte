@@ -70,6 +70,21 @@ class DemandeurDetailView(AdminRequiredMixin, DetailView):
             return getattr(obj, "demandeurmorale", obj)
         return obj
 
+    def get_context_data(self, **kwargs):
+        from django.db.models import Count, Sum
+
+        from apps.ventes.models import Vente
+
+        ctx = super().get_context_data(**kwargs)
+        ventes = Vente.objects.filter(demandeur_id=self.object.pk)
+        agg = ventes.aggregate(nb=Count("id"), total=Sum("prix_total"))
+        ctx["ventes_nb"] = agg["nb"] or 0
+        ctx["ventes_total"] = agg["total"] or 0
+        ctx["ventes_recentes"] = ventes.select_related("utilisateur").order_by(
+            "-date_vente", "-id"
+        )[:5]
+        return ctx
+
 
 # --- Personne physique -----------------------------------------------------
 class DemandeurPhysiqueCreateView(AdminRequiredMixin, CreateView):

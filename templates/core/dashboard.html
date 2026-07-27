@@ -4,6 +4,28 @@
 {% block page_title %}Tableau de bord{% endblock %}
 
 {% block content %}
+<div class="content-card mb-3" style="padding:.75rem 1.25rem;">
+    <form method="get" class="row gx-3 gy-2 align-items-end">
+        <div class="col-12 col-sm-auto d-flex align-items-center text-muted fw-semibold pb-sm-1">
+            <i class="fa-regular fa-calendar me-2"></i> Période
+        </div>
+        <div class="col-6 col-sm-auto">
+            <label class="form-label small mb-1" for="date_debut">Du</label>
+            <input id="date_debut" type="date" name="date_debut" value="{{ filtres.date_debut }}" class="form-control form-control-sm" style="min-width:150px;">
+        </div>
+        <div class="col-6 col-sm-auto">
+            <label class="form-label small mb-1" for="date_fin">Au</label>
+            <input id="date_fin" type="date" name="date_fin" value="{{ filtres.date_fin }}" class="form-control form-control-sm" style="min-width:150px;">
+        </div>
+        <div class="col-12 col-sm-auto d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-filter me-1"></i> Filtrer</button>
+            {% if filtres.date_debut or filtres.date_fin %}
+            <a href="{% url 'core:dashboard' %}" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
 <div class="row g-3 mb-4">
     <div class="col-6 col-xl-3">
         <div class="stat-card">

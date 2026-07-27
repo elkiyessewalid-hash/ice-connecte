@@ -18,10 +18,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Imports locaux : les modèles Vente/Demandeur peuvent ne pas encore
         # exister aux premières étapes du projet — le tableau de bord reste alors
         # affichable avec des valeurs à zéro.
+        from django.utils.dateparse import parse_date
+
         from apps.demandeurs.models import Demandeur
         from apps.ventes.models import Vente
 
+        # Filtre optionnel par plage de dates (les agrégats, le graphique et les
+        # ventes récentes reflètent la période choisie).
         ventes = Vente.objects.all()
+        date_debut = parse_date(self.request.GET.get("date_debut", "").strip())
+        date_fin = parse_date(self.request.GET.get("date_fin", "").strip())
+        if date_debut:
+            ventes = ventes.filter(date_vente__gte=date_debut)
+        if date_fin:
+            ventes = ventes.filter(date_vente__lte=date_fin)
+        ctx["filtres"] = {
+            "date_debut": self.request.GET.get("date_debut", ""),
+            "date_fin": self.request.GET.get("date_fin", ""),
+        }
+
         agregats = ventes.aggregate(
             total=Count("id"),
             quantite=Sum("quantite"),

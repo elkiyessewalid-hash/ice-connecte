@@ -206,3 +206,22 @@ class DemandeurActionTests(TestCase):
         resp = self.client.post(reverse("demandeurs:delete", args=[self.dem.pk]))
         self.assertRedirects(resp, reverse("demandeurs:list"))
         self.assertTrue(Demandeur.objects.filter(pk=self.dem.pk).exists())
+
+    def test_detail_affiche_les_ventes(self):
+        from decimal import Decimal
+
+        from apps.referentiel.models import Referentiel
+        from apps.ventes.models import Vente
+
+        ref = Referentiel.objects.create(
+            code="R1", nom="N", ville="V", prix_unitaire=Decimal("4.50"), is_active=True
+        )
+        v = Vente(
+            demandeur=self.dem, referentiel=ref, prix_unitaire=ref.prix_unitaire,
+            quantite=Decimal("10"), prix_total=Decimal("45"),
+        )
+        v.utilisateur = self.admin
+        v.save()
+        resp = self.client.get(reverse("demandeurs:detail", args=[self.dem.pk]))
+        self.assertEqual(resp.context["ventes_nb"], 1)
+        self.assertContains(resp, v.code_vente)

@@ -32,3 +32,28 @@ class DashboardAccessTests(TestCase):
     def test_dashboard_requiert_connexion(self):
         resp = self.client.get(reverse("core:dashboard"))
         self.assertEqual(resp.status_code, 302)
+
+    def test_dashboard_filtre_par_date(self):
+        from datetime import date
+        from decimal import Decimal
+
+        from apps.demandeurs.models import Demandeur, DemandeurPhysique
+        from apps.referentiel.models import Referentiel
+        from apps.ventes.models import Vente
+
+        ref = Referentiel.objects.create(
+            code="R1", nom="N", ville="V", prix_unitaire=Decimal("4.50"), is_active=True
+        )
+        dem = DemandeurPhysique.objects.create(
+            code="D1", cin="C1", nom="A", prenom="B", statut=Demandeur.Statut.ACHETEUR
+        )
+        for jour in (date(2026, 1, 1), date(2026, 7, 1)):
+            v = Vente(
+                demandeur=dem, referentiel=ref, prix_unitaire=ref.prix_unitaire,
+                quantite=Decimal("10"), prix_total=Decimal("45"), date_vente=jour,
+            )
+            v.utilisateur = self.agent
+            v.save()
+        self.client.force_login(self.agent)
+        resp = self.client.get(reverse("core:dashboard"), {"date_debut": "2026-06-01"})
+        self.assertEqual(resp.context["total_ventes"], 1)  # seule la vente de juillet

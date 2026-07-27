@@ -29,6 +29,32 @@
             {% endif %}
         </dd>
     </dl>
+
+    <hr>
+    <h6 class="mb-2">
+        <i class="fa-solid fa-receipt me-1"></i>Ventes
+        <span class="badge bg-secondary">{{ ventes_nb }}</span>
+        {% if ventes_total %}<span class="text-muted small ms-2">Total : {{ ventes_total|floatformat:2 }} DH</span>{% endif %}
+    </h6>
+    {% if ventes_recentes %}
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Code BG</th><th>Date</th><th class="text-end">Total (DH)</th></tr></thead>
+            <tbody>
+            {% for v in ventes_recentes %}
+                <tr>
+                    <td><a href="{% url 'ventes:ticket' v.pk %}" target="_blank">{{ v.code_vente }}</a></td>
+                    <td>{{ v.date_vente|date:"d/m/Y" }}</td>
+                    <td class="text-end">{{ v.prix_total|floatformat:2 }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if ventes_nb > 5 %}<p class="text-muted small mt-2 mb-0">Les 5 ventes les plus récentes.</p>{% endif %}
+    {% else %}
+    <p class="text-muted small mb-0">Aucune vente pour ce demandeur.</p>
+    {% endif %}
 </div>
 <div class="modal-footer">
     {% if demandeur.categorie == 'PHYSIQUE' %}
