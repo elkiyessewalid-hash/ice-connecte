@@ -169,3 +169,40 @@ class DemandeurListFilterTests(TestCase):
         resp = self.client.get(reverse("demandeurs:detail", args=[m.pk]))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Coop Nour")
+
+
+class DemandeurActionTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user("admin", password="p", role=User.Role.ADMIN)
+        self.client.force_login(self.admin)
+        self.dem = DemandeurPhysique.objects.create(
+            code="DP1", cin="X1", nom="A", prenom="B",
+            statut=Demandeur.Statut.ACHETEUR, is_active=True,
+        )
+
+    def test_toggle_active(self):
+        self.client.post(reverse("demandeurs:toggle_active", args=[self.dem.pk]))
+        self.dem.refresh_from_db()
+        self.assertFalse(self.dem.is_active)
+        self.client.post(reverse("demandeurs:toggle_active", args=[self.dem.pk]))
+        self.dem.refresh_from_db()
+        self.assertTrue(self.dem.is_active)
+
+    def test_delete_protege_si_vente_rattachee(self):
+        from decimal import Decimal
+
+        from apps.referentiel.models import Referentiel
+        from apps.ventes.models import Vente
+
+        ref = Referentiel.objects.create(
+            code="R1", nom="N", ville="V", prix_unitaire=Decimal("4.50"), is_active=True
+        )
+        v = Vente(
+            demandeur=self.dem, referentiel=ref, prix_unitaire=ref.prix_unitaire,
+            quantite=Decimal("10"), prix_total=Decimal("45"),
+        )
+        v.utilisateur = self.admin
+        v.save()
+        resp = self.client.post(reverse("demandeurs:delete", args=[self.dem.pk]))
+        self.assertRedirects(resp, reverse("demandeurs:list"))
+        self.assertTrue(Demandeur.objects.filter(pk=self.dem.pk).exists())

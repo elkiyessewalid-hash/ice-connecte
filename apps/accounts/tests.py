@@ -82,6 +82,12 @@ class UserManagementPermissionTests(TestCase):
         self.client.force_login(self.agent)
         self.assertEqual(self.client.get(reverse("accounts:user_list")).status_code, 403)
 
+    def test_admin_ne_peut_pas_se_supprimer(self):
+        self.client.force_login(self.admin)
+        resp = self.client.post(reverse("accounts:user_delete", args=[self.admin.pk]))
+        self.assertRedirects(resp, reverse("accounts:user_list"))
+        self.assertTrue(User.objects.filter(pk=self.admin.pk).exists())
+
     def test_creation_utilisateur(self):
         self.client.force_login(self.admin)
         resp = self.client.post(

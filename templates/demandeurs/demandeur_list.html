@@ -57,6 +57,13 @@
             <button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
         </div>
     </form>
+    {% if request.GET %}
+    <div class="text-end mb-2">
+        <a href="{% url 'demandeurs:list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fa-solid fa-xmark me-1"></i> Réinitialiser
+        </a>
+    </div>
+    {% endif %}
 
     <div id="demandeur-results">
         {% include "demandeurs/_demandeur_table.html" %}

@@ -3,11 +3,6 @@ from django import forms
 
 from .models import DemandeurMorale, DemandeurPhysique
 
-# Widgets communs Bootstrap
-_TEXT = forms.TextInput(attrs={"class": "form-control"})
-_SELECT = forms.Select(attrs={"class": "form-select"})
-_CHECK = forms.CheckboxInput(attrs={"class": "form-check-input"})
-
 _CIN_DEJA_UTILISE = "Ce CIN est déjà utilisé par un autre demandeur."
 
 

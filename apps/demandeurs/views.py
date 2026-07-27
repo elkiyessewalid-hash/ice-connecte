@@ -7,12 +7,13 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.accounts.mixins import AdminRequiredMixin
+from apps.core.mixins import HtmxListMixin, filtre_etat
 
 from .forms import DemandeurMoraleForm, DemandeurPhysiqueForm
 from .models import Demandeur, DemandeurMorale, DemandeurPhysique
 
 
-class DemandeurListView(AdminRequiredMixin, ListView):
+class DemandeurListView(HtmxListMixin, AdminRequiredMixin, ListView):
     model = Demandeur
     template_name = "demandeurs/demandeur_list.html"
     partial_template_name = "demandeurs/_demandeur_table.html"
@@ -27,11 +28,7 @@ class DemandeurListView(AdminRequiredMixin, ListView):
         statut = self.request.GET.get("statut", "").strip()
         if statut in Demandeur.Statut.values:
             qs = qs.filter(statut=statut)
-        etat = self.request.GET.get("etat", "").strip()
-        if etat == "actif":
-            qs = qs.filter(is_active=True)
-        elif etat == "inactif":
-            qs = qs.filter(is_active=False)
+        qs = filtre_etat(qs, self.request)
         recherche = self.request.GET.get("q", "").strip()
         if recherche:
             # Recherche sur code + libellé (nom/prénom/raison sociale) + CIN des
@@ -55,11 +52,6 @@ class DemandeurListView(AdminRequiredMixin, ListView):
             "etat": self.request.GET.get("etat", ""),
         }
         return ctx
-
-    def get_template_names(self):
-        if self.request.headers.get("HX-Request"):
-            return [self.partial_template_name]
-        return [self.template_name]
 
 
 class DemandeurDetailView(AdminRequiredMixin, DetailView):

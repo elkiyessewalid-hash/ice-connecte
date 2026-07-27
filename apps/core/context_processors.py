@@ -15,7 +15,7 @@ from django.db.utils import Error as DatabaseError
 def _get_referentiel_actif():
     try:
         from apps.referentiel.models import Referentiel
-    except Exception:  # app/modèle pas encore disponible
+    except ImportError:  # app/modèle pas encore disponible
         return None
     try:
         return Referentiel.get_active()

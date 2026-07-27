@@ -1,5 +1,4 @@
 """Mixins de contrôle d'accès par rôle, réutilisés par toutes les vues protégées."""
-from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 
@@ -25,10 +24,6 @@ class RoleRequiredMixin(LoginRequiredMixin):
             return super().dispatch(request, *args, **kwargs)
 
         if self.allowed_roles and request.user.role not in self.allowed_roles:
-            messages.error(
-                request,
-                "Vous n'avez pas les droits nécessaires pour accéder à cette page.",
-            )
             raise PermissionDenied("Rôle non autorisé.")
 
         return super().dispatch(request, *args, **kwargs)

@@ -12,6 +12,7 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView
 
 from apps.accounts.mixins import VenteCreateRequiredMixin
+from apps.core.mixins import HtmxListMixin
 from apps.referentiel.models import Referentiel
 
 from .exports import export_ventes_excel, export_ventes_pdf
@@ -137,7 +138,7 @@ def filtrer_ventes(request):
     return qs
 
 
-class HistoriqueVentesView(LoginRequiredMixin, ListView):
+class HistoriqueVentesView(HtmxListMixin, LoginRequiredMixin, ListView):
     """Historique des ventes (tous rôles) avec filtres serveur + pagination HTMX."""
 
     template_name = "ventes/historique.html"
@@ -163,11 +164,6 @@ class HistoriqueVentesView(LoginRequiredMixin, ListView):
             "montant_max": self.request.GET.get("montant_max", ""),
         }
         return ctx
-
-    def get_template_names(self):
-        if self.request.headers.get("HX-Request"):
-            return [self.partial_template_name]
-        return [self.template_name]
 
 
 class TicketDetailView(LoginRequiredMixin, DetailView):

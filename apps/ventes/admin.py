@@ -23,4 +23,5 @@ class VenteAdmin(admin.ModelAdmin):
 
 @admin.register(SequenceCounter)
 class SequenceCounterAdmin(admin.ModelAdmin):
-    list_display = ("annee", "dernier_numero")
+    list_display = ("annee", "referentiel", "dernier_numero")
+    list_filter = ("annee", "referentiel")

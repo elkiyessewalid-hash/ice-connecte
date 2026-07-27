@@ -6,6 +6,8 @@ from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from apps.core.mixins import HtmxListMixin, filtre_etat
+
 from .forms import LoginForm, UserCreateForm, UserUpdateForm
 from .mixins import AdminRequiredMixin
 from .models import User
@@ -38,7 +40,7 @@ class LogoutView(auth_views.LogoutView):
 # ---------------------------------------------------------------------------
 # Gestion des utilisateurs — CRUD (Admin uniquement)
 # ---------------------------------------------------------------------------
-class UserListView(AdminRequiredMixin, ListView):
+class UserListView(HtmxListMixin, AdminRequiredMixin, ListView):
     model = User
     template_name = "accounts/user_list.html"
     partial_template_name = "accounts/_user_table.html"
@@ -57,11 +59,7 @@ class UserListView(AdminRequiredMixin, ListView):
         role = self.request.GET.get("role", "").strip()
         if role in User.Role.values:
             qs = qs.filter(role=role)
-        etat = self.request.GET.get("etat", "").strip()
-        if etat == "actif":
-            qs = qs.filter(is_active=True)
-        elif etat == "inactif":
-            qs = qs.filter(is_active=False)
+        qs = filtre_etat(qs, self.request)
         return qs.distinct()
 
     def get_context_data(self, **kwargs):
@@ -73,12 +71,6 @@ class UserListView(AdminRequiredMixin, ListView):
             "etat": self.request.GET.get("etat", ""),
         }
         return ctx
-
-    def get_template_names(self):
-        # Requête HTMX -> on ne renvoie que le fragment (tableau + pagination).
-        if self.request.headers.get("HX-Request"):
-            return [self.partial_template_name]
-        return [self.template_name]
 
 
 class UserDetailView(AdminRequiredMixin, DetailView):

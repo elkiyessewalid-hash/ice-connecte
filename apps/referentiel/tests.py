@@ -82,3 +82,16 @@ class ReferentielSingletonViewTests(TestCase):
         )
         self.assertEqual(Referentiel.objects.count(), 1)
         self.assertTrue(Referentiel.objects.first().is_active)
+
+    def test_activation_bascule_l_actif(self):
+        r1 = Referentiel.objects.create(
+            code="A1", nom="Un", ville="Agadir", prix_unitaire=Decimal("4.50"), is_active=True
+        )
+        r2 = Referentiel.objects.create(
+            code="A2", nom="Deux", ville="Safi", prix_unitaire=Decimal("5.00"), is_active=False
+        )
+        self.client.post(reverse("referentiel:activate", args=[r2.pk]))
+        r1.refresh_from_db()
+        r2.refresh_from_db()
+        self.assertTrue(r2.is_active)
+        self.assertFalse(r1.is_active)
