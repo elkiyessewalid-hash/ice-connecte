@@ -1,21 +1,29 @@
 # Gestion des ventes de blocs de glace 🧊
 
-Application web professionnelle (Django + PostgreSQL + Bootstrap 5) pour gérer les
+Application web professionnelle (Django + PostgreSQL + Bootstrap 5 + HTMX) pour gérer les
 **utilisateurs**, le **référentiel** produit, les **demandeurs** et les **ventes** de blocs
 de glace — contexte ONP (Office National des Pêches, Maroc).
 
 ## Fonctionnalités
 
-- **Authentification sécurisée** (mots de passe hachés) avec **redirection selon le rôle**.
-- **Rôles & permissions** : Admin, Agent, Caissier (accès conditionné par des mixins).
-- **Gestion des utilisateurs** (CRUD, Admin uniquement).
-- **Référentiel** : CRUD, upload de logo, règle « un seul référentiel actif ».
-- **Demandeurs** : personnes physiques & morales (CRUD, activation/désactivation, recherche).
-- **Ventes** : saisie avec calcul automatique, **code de vente** `BG_<réf>/<AA> <NNNNN>`,
-  sélection du demandeur par modale, **ticket imprimable**.
-- **Historique** : DataTables (recherche, tri, pagination), filtres, exports **Excel** & **PDF**, impression.
+- **Authentification sécurisée** : mots de passe hachés, **affichage/masquage** (œil),
+  **verrouillage anti-force-brute** (django-axes) et **redirection selon le rôle**.
+- **Rôles & permissions** : Admin, Agent (lecture seule), Caissier — accès conditionné par des mixins.
+- **Gestion des utilisateurs** (CRUD, Admin) : recherche (login/nom/prénom), filtres profil & état,
+  fiche détail en modale, longueurs de champs contrôlées.
+- **Référentiel** : CRUD + upload de logo (validé) ; **un seul référentiel actif** garanti par
+  une contrainte base de données.
+- **Demandeurs** : personnes physiques & morales (CRUD, activation/désactivation) ; recherche
+  (code, CIN, nom, prénom, raison sociale), filtres type/statut/état, **CIN unique** entre les deux
+  tables (insensible à la casse), fiche détail en modale.
+- **Ventes** : saisie avec **calcul bidirectionnel** (saisir le Prix Total *ou* la Quantité),
+  **code de vente** `BG_<réf>/<AA> <NNNNN>`, sélection du demandeur en modale (clic simple),
+  **ticket imprimable en deux exemplaires sur une page A4**.
+- **Historique** : **pagination serveur HTMX (5/page)**, filtres (dates, demandeur, type, code,
+  montant min/max) avec réinitialisation, fiche ticket en modale, exports **Excel** & **PDF**
+  (Admin/Caissier), impression.
 - **Tableau de bord** : cartes d'agrégats + ventes récentes + graphique Chart.js.
-- Interface responsive (Bootstrap 5, FontAwesome, SweetAlert2).
+- Interface responsive (Bootstrap 5, HTMX, FontAwesome, SweetAlert2).
 
 ## Prérequis
 
@@ -82,14 +90,27 @@ GRANT ALL PRIVILEGES ON DATABASE gestion_glace TO gestion_user;
 
 | Écran                     | Admin | Agent | Caissier |
 |---------------------------|:-----:|:-----:|:--------:|
-| Dashboard                 |  ✅   |  ✅   |    ✅    |
+| Tableau de bord           |  ✅   |  ✅   |    ✅    |
 | Gestion Utilisateurs      |  ✅   |  ❌   |    ❌    |
 | Référentiel               |  ✅   |  ❌   |    ❌    |
-| Demandeurs (CRUD)         |  ✅   |  🔍*  |    ❌    |
-| Nouvelle Vente            |  ✅   |  ✅   |    ✅    |
+| Demandeurs (CRUD)         |  ✅   |  ❌   |    ❌    |
+| Nouvelle Vente            |  ✅   |  ❌   |    ✅    |
 | Historique des ventes     |  ✅   |  ✅   |    ✅    |
+| Exports Excel / PDF       |  ✅   |  ❌   |    ✅    |
 
-*🔍 L'agent peut rechercher des demandeurs (via la modale de vente) sans les gérer.*
+> L'**Agent** est en **lecture seule** : il consulte le tableau de bord et l'historique,
+> sans créer de vente ni exporter. Le **Caissier** crée et consulte les ventes (exports inclus).
+
+## Sécurité
+
+- **Anti-force-brute** : `django-axes` verrouille après 5 échecs (par IP + login), réinitialisation après succès.
+- **Contrôle d'accès** par rôle sur toutes les vues (mixins) ; exports réservés à l'Admin et au Caissier.
+- **XSS** : échappement systématique côté serveur (auto-escape) et côté client (rendus JavaScript).
+- **Injection de formule Excel** neutralisée à l'export.
+- **Upload de logo** validé (taille ≤ 2 Mo, extensions autorisées ; SVG refusé).
+- **Intégrité** : `date_vente` non future, CIN unique inter-tables, un seul référentiel actif (contrainte DB).
+- **Production** : échec au démarrage si `SECRET_KEY`/`ALLOWED_HOSTS` restent aux valeurs de dev ;
+  cookies sécurisés, HSTS et redirection HTTPS quand `DEBUG=False`.
 
 ## Architecture
 
@@ -100,7 +121,7 @@ apps/
   referentiel/     Référentiel produit (un seul actif)
   demandeurs/      Demandeurs physiques & moraux (héritage multi-table)
   ventes/          Ventes : code, calcul, ticket, historique, exports
-  core/            Tableau de bord + contexte partagé + commande de seed
+  core/            Tableau de bord + contexte partagé + mixins de liste (HTMX) + seed
 templates/         Gabarits (base, partials, un dossier par module)
 static/            CSS/JS applicatifs + logo
 media/             Logos de référentiels uploadés
@@ -127,8 +148,10 @@ python manage.py test
 ## Décisions de conception notables
 
 - **Code de vente** : `BG_<code_référentiel>/<AA> <NNNNN>` (ex. `BG_8234/26 00001`),
-  séquence à 5 chiffres incrémentée par année (compteur verrouillé, sûr en concurrence).
-- **Calcul de la vente** : l'utilisateur saisit le **Prix Total**, la **Quantité** est
-  calculée automatiquement (`Prix Total / Prix Unitaire`).
+  séquence à 5 chiffres incrémentée **par année et par référentiel** (compteur verrouillé
+  `select_for_update`, écriture atomique — sûr en concurrence).
+- **Calcul de la vente** : l'utilisateur saisit **soit le Prix Total, soit la Quantité** ;
+  l'autre valeur est calculée automatiquement à partir du **Prix Unitaire** du référentiel actif
+  (source de vérité côté serveur).
 - **Demandeurs** : héritage multi-table (base `Demandeur` + `DemandeurPhysique`/`DemandeurMorale`)
   pour une clé étrangère unique et propre depuis `Vente`.
