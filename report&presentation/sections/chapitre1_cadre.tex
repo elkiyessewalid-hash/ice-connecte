@@ -1,0 +1,62 @@
+Ce chapitre situe le projet dans son contexte. Il présente l'organisme d'accueil, expose la problématique métier à l'origine du besoin, précise les objectifs visés et décrit la démarche adoptée pour conduire le projet.
+
+\section{Présentation de l'organisme d'accueil}
+
+L'\textbf{Office National des Pêches (ONP)} est un établissement public marocain placé sous la tutelle du ministère chargé de la pêche maritime. Créé en 1969, il a pour mission de contribuer au développement du secteur de la pêche, de valoriser les produits de la mer et d'organiser leur commercialisation dans des conditions de qualité, de transparence et de traçabilité \cite{onp-site}.
+
+Parmi ses missions, l'ONP assure notamment la gestion et l'exploitation des halles aux poissons, l'organisation de la première vente du poisson, l'aménagement des points de débarquement, ainsi que la mise à disposition des professionnels d'infrastructures et de services de soutien à l'activité de pêche. La \textbf{fabrication et la distribution de glace} en font partie : la glace en blocs est un intrant essentiel de la chaîne du froid, car elle permet de préserver la fraîcheur du poisson depuis sa capture jusqu'à sa vente.
+
+L'ONP se caractérise par une forte dimension opérationnelle et une présence sur l'ensemble du littoral marocain. Cet environnement, marqué par des exigences de fiabilité et de rigueur dans le suivi des opérations, constitue un cadre pertinent pour un projet d'informatisation d'un processus de vente.
+
+\section{Contexte du projet}
+
+La glace produite par les usines de l'ONP est vendue aux professionnels du secteur (mareyeurs, coopératives, sociétés de distribution, etc.). Chaque vente correspond à une quantité de glace, exprimée en kilogrammes, facturée sur la base d'un \textbf{prix unitaire} fixé par usine (en dirhams par kilogramme). Le suivi de ces ventes doit permettre d'identifier le client, de tracer chaque transaction par un numéro unique et de conserver un historique fiable.
+
+Dans la situation initiale, ce suivi reposait largement sur des supports manuels. Cette approche, bien que fonctionnelle, atteint rapidement ses limites lorsque le volume d'opérations augmente et que le besoin de reporting se fait sentir.
+
+\section{Problématique}
+
+La gestion manuelle des ventes de blocs de glace soulève plusieurs difficultés :
+
+\begin{itemize}
+  \item \textbf{Fiabilité des calculs} : le calcul de la quantité à partir du prix (ou inversement) est effectué à la main, ce qui est source d'erreurs ;
+  \item \textbf{Numérotation des ventes} : l'attribution d'un numéro unique et croissant à chaque ticket est difficile à garantir, surtout en cas de saisies simultanées ;
+  \item \textbf{Traçabilité} : retrouver une vente passée, filtrer par période, par client ou par montant, devient fastidieux ;
+  \item \textbf{Pilotage} : l'absence d'indicateurs consolidés (volume vendu, chiffre d'affaires) prive les responsables d'une vision synthétique de l'activité ;
+  \item \textbf{Sécurité et rôles} : rien ne distingue formellement les personnes autorisées à créer une vente de celles qui ne doivent que la consulter.
+\end{itemize}
+
+La question centrale est donc la suivante : \emph{comment concevoir une application simple, fiable et sécurisée permettant de centraliser la gestion des ventes de blocs de glace, d'en garantir la cohérence et d'en faciliter le suivi ?}
+
+\section{Objectifs du projet}
+
+Pour répondre à cette problématique, le projet fixe les objectifs suivants :
+
+\begin{itemize}
+  \item centraliser la saisie et la consultation des ventes dans une application web unique ;
+  \item générer automatiquement un \textbf{code de vente unique} par ticket, de la forme \texttt{BG\_<réf>/<année> <numéro>} ;
+  \item automatiser le calcul entre \textbf{prix total} et \textbf{quantité} à partir du prix unitaire du référentiel ;
+  \item gérer les utilisateurs selon trois \textbf{rôles} distincts (Administrateur, Agent, Caissier) ;
+  \item paramétrer un référentiel d'usines à glace et gérer les clients (demandeurs) ;
+  \item offrir un \textbf{historique multicritère} avec exports (Excel, PDF, impression) ;
+  \item fournir un \textbf{tableau de bord} d'indicateurs et un graphique d'évolution ;
+  \item garantir la cohérence des données et la sécurité des accès.
+\end{itemize}
+
+\section{Conduite et planification du projet}
+
+Le projet a été mené selon une démarche itérative et incrémentale : après une phase de découverte de l'existant et d'analyse des besoins, les fonctionnalités ont été développées par lots successifs, chaque lot étant testé et validé avant de passer au suivant. Cette approche a permis d'obtenir rapidement une application fonctionnelle, puis de l'enrichir et de la fiabiliser au fil du temps (correctifs, audit, nouvelles fonctionnalités, documentation).
+
+La figure~\ref{fig:gantt} présente le planning prévisionnel du stage sous la forme d'un diagramme de Gantt.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\textwidth]{gantt.png}
+  \caption{Diagramme de Gantt : planification du stage}
+  \label{fig:gantt}
+\end{figure}
+\figdesc{Le planning s'étend sur environ cinq semaines, réparties en cinq phases : découverte et analyse, correctifs et amélioration de l'expérience utilisateur, audit et remédiation, développement des fonctionnalités, puis documentation et finalisation. Chaque phase se termine par une validation avant le démarrage de la suivante.}
+
+\section{Conclusion}
+
+Ce chapitre a présenté le cadre du projet : l'Office National des Pêches en tant que structure d'accueil, le contexte de la vente de glace, la problématique liée à sa gestion manuelle, les objectifs à atteindre et la démarche retenue. Le chapitre suivant traduit ces objectifs en une spécification détaillée des besoins.

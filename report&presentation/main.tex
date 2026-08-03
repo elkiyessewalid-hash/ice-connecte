@@ -1,0 +1,236 @@
+\documentclass[a4paper,oneside,12pt]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{csquotes}
+\usepackage{makeidx}
+\usepackage{pdflscape}
+\usepackage{needspace}
+
+\makeindex
+\graphicspath{{assets/screenshots/}{assets/}}
+
+\geometry{
+  a4paper,
+  left=2.5cm,
+  right=2.5cm,
+  top=2.5cm,
+  bottom=2.5cm
+}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+  citecolor=black,
+  plainpages=false,
+  hypertexnames=false,
+  pdfpagelabels=true,
+  pdftitle={Rapport de stage - IceVentes},
+  pdfauthor={Walid El Kiyesse}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{16pt}
+\raggedbottom
+
+\parindent 0pt
+\parskip 0.5em
+\setlist[itemize]{itemsep=0.2em, topsep=0.3em, parsep=0pt, partopsep=0pt}
+\setlist[enumerate]{itemsep=0.2em, topsep=0.3em, parsep=0pt, partopsep=0pt}
+\setlength{\floatsep}{0.45em}
+\setlength{\textfloatsep}{0.6em}
+\setlength{\intextsep}{0.45em}
+\captionsetup{skip=0.25em}
+\newcommand{\figdesc}[1]{%
+  \par\noindent
+  \begin{minipage}{\linewidth}
+    \raggedright\small\normalfont #1
+  \end{minipage}%
+  \par\vspace{0.35em}%
+}
+
+\definecolor{codeblue}{RGB}{25,70,140}
+\definecolor{codegray}{RGB}{110,110,110}
+\definecolor{codepurple}{RGB}{110,40,120}
+
+\lstdefinelanguage{python}{
+  keywords={and,as,assert,break,class,continue,def,del,elif,else,except,False,finally,for,from,global,if,import,in,is,lambda,None,nonlocal,not,or,pass,raise,return,True,try,while,with,yield,self},
+  keywordstyle=\color{codeblue}\bfseries,
+  ndkeywords={models,forms,def,print},
+  sensitive=true,
+  comment=[l]{\#},
+  commentstyle=\color{codegray}\ttfamily,
+  stringstyle=\color{codepurple}\ttfamily,
+  morestring=[b]',
+  morestring=[b]",
+  basicstyle=\ttfamily\small
+}
+
+\lstset{
+  breaklines=true,
+  breakatwhitespace=false,
+  basicstyle=\ttfamily\small,
+  frame=single,
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+  inputencoding=utf8,
+  extendedchars=true,
+  literate=
+    {à}{{\`a}}1 {â}{{\^a}}1 {ä}{{\"a}}1
+    {ç}{{\c{c}}}1
+    {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {ë}{{\"e}}1
+    {î}{{\^i}}1 {ï}{{\"i}}1
+    {ô}{{\^o}}1 {ö}{{\"o}}1
+    {ù}{{\`u}}1 {û}{{\^u}}1 {ü}{{\"u}}1
+    {À}{{\`A}}1 {Â}{{\^A}}1 {Ä}{{\"A}}1
+    {Ç}{{\c{C}}}1
+    {É}{{\'E}}1 {È}{{\`E}}1 {Ê}{{\^E}}1 {Ë}{{\"E}}1
+    {Î}{{\^I}}1 {Ï}{{\"I}}1
+    {Ô}{{\^O}}1 {Ö}{{\"O}}1
+    {Ù}{{\`U}}1 {Û}{{\^U}}1 {Ü}{{\"U}}1
+    {œ}{{\oe}}1 {Œ}{{\OE}}1
+}
+
+\newcommand{\reportTitle}{Conception et réalisation d'une application web de gestion des ventes de blocs de glace}
+\newcommand{\reportSubtitle}{« IceVentes » : plateforme Django pour l'Office National des Pêches}
+\newcommand{\reportAuthor}{Walid El Kiyesse}
+\newcommand{\reportSupervisor}{Abdelghani OUGRI}
+\newcommand{\reportCompany}{Office National des Pêches (ONP)}
+\newcommand{\reportSchool}{École Marocaine des Sciences de l'Ingénieur (EMSI)}
+\newcommand{\reportFiliere}{Filière 3IIR --- Ingénierie Informatique et Réseaux}
+\newcommand{\reportAcademicYear}{2025--2026}
+\newcommand{\reportDuration}{Durée du stage : 1 mois (06 juillet -- 06 août 2026)}
+\newcommand{\reportKeywords}{IceVentes, application web, Django, Python, gestion des ventes, blocs de glace, ONP, Bootstrap, HTMX, rôles, tableau de bord}
+\newcommand{\reportLogoPath}{assets/EMSI_logo2.png}
+\newcommand{\reportOnpLogoPath}{assets/logo_onp.png}
+\renewcommand{\bibname}{Bibliographie et Nétographie}
+
+\providecommand{\keywords}[1]{\textbf{\textit{Mots clés : }} #1}
+\providecommand{\enkeywords}[1]{\textbf{\textit{Keywords: }} #1}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+\large \reportSchool \\[0.25cm]
+{\normalsize \reportFiliere}\\[0.7cm]
+
+\IfFileExists{\reportLogoPath}{%
+  \makebox[\textwidth]{%
+    \raisebox{-0.5\height}{\includegraphics[width=0.30\textwidth]{\reportLogoPath}}%
+    \hfill
+    \raisebox{-0.5\height}{\includegraphics[width=0.20\textwidth]{\reportOnpLogoPath}}%
+  }\\[1.2cm]
+}{
+  \vspace{1.2cm}
+}
+
+{\huge \textbf{Rapport de stage}}\\[0.6cm]
+{\Large \reportTitle}\\[0.35cm]
+{\large \reportSubtitle}\\[1.2cm]
+
+{\Large \textbf{Réalisé par}}\\[0.3cm]
+{\large \reportAuthor}\\[0.9cm]
+
+{\large \textbf{Encadré par}}\\[0.3cm]
+{\large \reportSupervisor}\\[0.9cm]
+
+{\large \textbf{Structure d'accueil}}\\[0.3cm]
+{\large \reportCompany}\\[1.6cm]
+
+{\normalsize \reportDuration}\\[0.35cm]
+Année académique \reportAcademicYear
+\end{center}
+\end{titlepage}
+
+\pagenumbering{roman}
+\pagestyle{plain}
+\setcounter{page}{1}
+
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+\input{sections/resume}
+
+\vspace{0.6em}
+\noindent\keywords{\reportKeywords}
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\input{sections/abstract}
+
+\vspace{0.6em}
+\noindent\enkeywords{IceVentes, web application, Django, Python, sales management, ice blocks, ONP, Bootstrap, HTMX, roles, dashboard}
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Table des matières}
+\tableofcontents
+\setcounter{tocdepth}{2}
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Liste des figures}
+\listoffigures
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Liste des tableaux}
+\listoftables
+\clearpage
+\phantomsection
+\chapter*{Liste des abréviations}
+\addcontentsline{toc}{chapter}{Liste des abréviations}
+\input{sections/acronyms}
+
+\clearpage
+\pagestyle{fancy}
+\pagenumbering{arabic}
+
+\chapter*{Introduction générale}
+\addcontentsline{toc}{chapter}{Introduction générale}
+\input{sections/introduction}
+
+\chapter{Présentation du cadre du projet}
+\input{sections/chapitre1_cadre}
+
+\chapter{Spécification des besoins}
+\input{sections/chapitre2_besoins}
+
+\chapter{Conception du système}
+\input{sections/chapitre3_conception}
+
+\chapter{Réalisation du système}
+\input{sections/chapitre4_realisation}
+
+\chapter*{Conclusion générale}
+\addcontentsline{toc}{chapter}{Conclusion générale}
+\input{sections/conclusion}
+
+\clearpage
+\addcontentsline{toc}{chapter}{Bibliographie et Nétographie}
+\input{sections/references}
+
+\end{document}

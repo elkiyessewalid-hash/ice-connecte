@@ -1,0 +1,166 @@
+Ce chapitre présente la réalisation effective de l'application : l'environnement et les outils utilisés, les interfaces produites, une fonctionnalité clé illustrée par un extrait de code, les aspects de sécurité et enfin la validation.
+
+\section{Environnement et outils de développement}
+
+L'application a été développée avec un ensemble d'outils libres et éprouvés, récapitulés dans le tableau~\ref{tab:outils}.
+
+\begin{table}[H]
+\centering
+\caption{Environnement technique et outils utilisés}
+\label{tab:outils}
+\begin{tabular}{@{}p{4.2cm}p{9.8cm}@{}}
+\toprule
+\textbf{Outil / Technologie} & \textbf{Rôle dans le projet} \\
+\midrule
+Python & Langage de programmation principal. \\
+Django & Cadriciel web (ORM, routage, gabarits, administration). \\
+SQLite / PostgreSQL & Base de données (développement / production). \\
+HTML, CSS, Bootstrap~5 & Structure et mise en forme responsive des pages. \\
+HTMX & Mises à jour partielles de page (filtres, pagination, modales). \\
+Chart.js & Graphique d'évolution du chiffre d'affaires. \\
+django-crispy-forms & Rendu soigné des formulaires. \\
+openpyxl & Génération des exports Excel. \\
+xhtml2pdf & Génération des exports PDF. \\
+django-axes & Protection contre les attaques par force brute. \\
+Flatpickr & Sélecteur de date au format jj/mm/aaaa. \\
+UML / PlantUML & Modélisation et génération des diagrammes. \\
+Git & Gestion de versions du code source. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Présentation des interfaces}
+
+Cette section illustre les principaux écrans de l'application.
+
+\subsection{Tableau de bord}
+
+Le tableau de bord (figure~\ref{fig:dashboard}) constitue la page d'accueil ; il offre une vision synthétique de l'activité.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{tableau_de_bord.png}
+  \caption{Tableau de bord : indicateurs et évolution du chiffre d'affaires}
+  \label{fig:dashboard}
+\end{figure}
+\figdesc{Le tableau de bord affiche quatre indicateurs clés (nombre total de ventes, quantité vendue en Kg, chiffre d'affaires en DH et nombre de demandeurs actifs), présentés en notation compacte (K, M). Un graphique donne l'évolution du chiffre d'affaires sur les six derniers mois, et un panneau liste les ventes récentes. Un filtre par période permet de restreindre les statistiques à une plage de dates.}
+
+\subsection{Gestion des utilisateurs}
+
+L'écran de gestion des utilisateurs (figure~\ref{fig:users}) est réservé à l'administrateur.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{gestion_utilisateurs.png}
+  \caption{Gestion des utilisateurs et des rôles}
+  \label{fig:users}
+\end{figure}
+\figdesc{La liste des utilisateurs affiche le login, le nom, le prénom, le rôle (Admin, Agent, Caissier) et le statut (actif ou désactivé). Une barre de recherche et des filtres par profil et par état facilitent la navigation. Les actions permettent de consulter, modifier et supprimer un compte, ou d'en créer un nouveau.}
+
+\subsection{Référentiel}
+
+Le référentiel (figure~\ref{fig:referentiel}) paramètre l'usine à glace et son prix.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{referentiel.png}
+  \caption{Référentiel : usine à glace et prix unitaire}
+  \label{fig:referentiel}
+\end{figure}
+\figdesc{Le référentiel décrit l'usine à glace par un code, un nom, une ville, un logo et un prix unitaire en DH/Kg. Un seul référentiel est actif à la fois : c'est son prix (ici 4,50 DH/Kg pour l'usine d'Agadir) qui alimente automatiquement le calcul des nouvelles ventes.}
+
+\subsection{Gestion des demandeurs}
+
+La gestion des demandeurs (figure~\ref{fig:demandeurs}) recense les clients.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{demandeurs.png}
+  \caption{Gestion des demandeurs (clients)}
+  \label{fig:demandeurs}
+\end{figure}
+\figdesc{Les demandeurs peuvent être des personnes physiques ou morales, avec un statut acheteur ou vendeur. La liste, paginée, propose une recherche (code, CIN, nom, raison sociale) et des filtres par type, statut et état. Chaque demandeur peut être consulté, activé/désactivé, modifié ou supprimé.}
+
+\subsection{Saisie d'une nouvelle vente}
+
+L'écran de saisie (figure~\ref{fig:vente}) est au cœur de l'application.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{nouvelle_vente.png}
+  \caption{Saisie d'une nouvelle vente et génération du code BG}
+  \label{fig:vente}
+\end{figure}
+\figdesc{Le code BG est généré automatiquement à l'enregistrement (ici \texttt{BG\_8234/26 00120}). Après avoir choisi un demandeur, l'utilisateur saisit soit le prix total, soit la quantité : l'autre valeur est calculée instantanément à partir du prix unitaire du référentiel. La date de vente et le prix unitaire sont pré-remplis.}
+
+\subsection{Historique des ventes}
+
+L'historique (figure~\ref{fig:historique}) permet la consultation et l'export.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{historique_ventes.png}
+  \caption{Historique des ventes : filtres multicritères et exports}
+  \label{fig:historique}
+\end{figure}
+\figdesc{L'historique présente les ventes avec leur code, demandeur, quantité, prix unitaire, prix total, date et utilisateur. Une barre de filtres (dates, demandeur, type, code, montant minimum et maximum) affine les résultats sans rechargement complet. Les boutons Excel, PDF et Imprimer permettent d'exporter la sélection.}
+
+\section{Focus sur une fonctionnalité clé : la génération du code de vente}
+
+Le code de vente est produit par un service dédié, exécuté dans une transaction afin de garantir un numéro unique même en cas de saisies simultanées. Le compteur associé à l'année et au référentiel est verrouillé le temps de l'incrément (\texttt{select\_for\_update}). L'extrait suivant en présente le principe.
+
+\begin{lstlisting}[language=python, caption={Génération du code de vente (principe)}, label={lst:code}]
+def generer_code_vente(referentiel, date_vente):
+    annee = date_vente.year
+    with transaction.atomic():
+        compteur, _ = SequenceCounter.objects \
+            .select_for_update() \
+            .get_or_create(annee=annee, referentiel=referentiel)
+        compteur.dernier_numero += 1
+        compteur.save(update_fields=["dernier_numero"])
+        numero = compteur.dernier_numero
+    aa = f"{annee % 100:02d}"
+    return f"BG_{referentiel.code}/{aa} {numero:05d}"
+\end{lstlisting}
+
+Le même principe de calcul \emph{côté serveur} s'applique à la vente : la quantité et le prix total sont toujours recalculés à partir du prix unitaire du référentiel, la valeur saisie par l'utilisateur servant de point de départ. Cela évite toute incohérence et ne fait pas confiance aux valeurs éventuellement modifiées côté client.
+
+\section{Sécurité}
+
+Plusieurs mesures renforcent la sécurité de l'application :
+
+\begin{itemize}
+  \item \textbf{Contrôle d'accès par rôle} : chaque écran vérifie que l'utilisateur dispose des droits requis ; l'Agent, par exemple, ne peut pas accéder à la création de ventes ni aux exports ;
+  \item \textbf{Protection anti-force-brute} : après plusieurs échecs de connexion, l'accès est temporairement verrouillé (django-axes) ;
+  \item \textbf{Mots de passe hachés} et validation des entrées à la frontière du système ;
+  \item \textbf{Intégrité des données} : unicité des codes, référentiel actif unique et numérotation fiable garantis au niveau de la base et de la logique métier.
+\end{itemize}
+
+\section{Tests et validation}
+
+La validation a combiné des vérifications automatiques et des tests manuels des parcours par rôle. Le tableau~\ref{tab:validation} en présente une synthèse.
+
+\begin{table}[H]
+\centering
+\caption{Synthèse des validations réalisées}
+\label{tab:validation}
+\begin{tabular}{@{}p{4.6cm}p{4.2cm}p{4.4cm}@{}}
+\toprule
+\textbf{Élément validé} & \textbf{Méthode} & \textbf{Résultat} \\
+\midrule
+Contrôle d'accès par rôle & Tests automatisés & Conforme \\
+Génération du code de vente & Tests unitaires & Codes uniques et croissants \\
+Calcul prix / quantité & Tests unitaires & Cohérent avec le prix unitaire \\
+Référentiel actif unique & Tests + contrainte base & Un seul actif garanti \\
+Filtres de l'historique & Tests fonctionnels & Résultats corrects \\
+Exports Excel / PDF & Vérification fonctionnelle & Fichiers générés \\
+Verrouillage anti-force-brute & Tests automatisés & Verrouillage effectif \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+L'ensemble des tests automatisés s'exécute sans erreur, ce qui confirme la fiabilité des règles métier et des contrôles d'accès mis en place.
+
+\section{Conclusion}
+
+Ce chapitre a présenté la réalisation concrète d'IceVentes : son environnement technique, ses interfaces, une fonctionnalité clé, ses mécanismes de sécurité et sa validation. L'application couvre l'ensemble des objectifs fixés et fonctionne de bout en bout.

@@ -1,0 +1,15 @@
+# Artefacts de compilation LaTeX (le PDF final, main.pdf, est conservé)
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.idx
+*.ilg
+*.ind
+*.synctex.gz
+*.bbl
+*.blg

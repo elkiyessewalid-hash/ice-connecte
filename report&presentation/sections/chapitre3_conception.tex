@@ -1,0 +1,88 @@
+Ce chapitre décrit la conception de l'application : son architecture logicielle, son modèle de données et la dynamique de ses principaux scénarios, illustrée par des diagrammes de séquence. Les règles métier essentielles sont également précisées.
+
+\section{Architecture logicielle}
+
+L'application est bâtie sur le cadriciel \textbf{Django}, qui repose sur le patron d'architecture \textbf{MVT} (Model-View-Template), variante du modèle MVC :
+
+\begin{itemize}
+  \item le \textbf{Model} décrit les données et la logique métier ; il est projeté sur la base de données par l'ORM de Django ;
+  \item la \textbf{View} traite les requêtes, applique les règles d'accès et prépare les données ;
+  \item le \textbf{Template} produit les pages HTML envoyées au navigateur.
+\end{itemize}
+
+L'application suit une architecture \textbf{client-serveur} classique : le navigateur envoie des requêtes HTTP au serveur Django, qui interroge la base de données puis renvoie les pages. Côté interface, la bibliothèque \textbf{HTMX} permet d'actualiser certaines portions de page (listes filtrées, pagination, fenêtres de détail) sans recharger l'écran complet, ce qui fluidifie l'expérience tout en conservant une logique centralisée côté serveur.
+
+Le code est organisé en modules fonctionnels (\emph{applications} Django) : \texttt{accounts} (utilisateurs et authentification), \texttt{referentiel}, \texttt{demandeurs}, \texttt{ventes} et \texttt{core} (tableau de bord et éléments partagés). Cette séparation favorise la lisibilité et la maintenabilité.
+
+\section{Conception de la base de données}
+
+Le modèle de données est présenté par le diagramme de classes de la figure~\ref{fig:classes}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{classes.png}
+  \caption{Diagramme de classes d'IceVentes}
+  \label{fig:classes}
+\end{figure}
+\figdesc{Le diagramme regroupe les entités principales : \texttt{User} (utilisateur avec rôle), \texttt{Demandeur} et ses deux spécialisations \texttt{DemandeurPhysique} et \texttt{DemandeurMorale} (héritage), \texttt{Referentiel}, \texttt{Vente} et \texttt{SequenceCounter} (compteur de numérotation). Une vente référence un demandeur, un référentiel et l'utilisateur qui l'a saisie ; ces liens sont protégés (suppression interdite) afin de préserver l'intégrité de l'historique.}
+
+Le modèle appelle plusieurs remarques :
+
+\begin{itemize}
+  \item les demandeurs sont modélisés par \textbf{héritage} : une classe de base \texttt{Demandeur} porte les attributs communs (code, statut, catégorie), tandis que \texttt{DemandeurPhysique} et \texttt{DemandeurMorale} ajoutent leurs champs spécifiques ;
+  \item le \texttt{Referentiel} porte le \textbf{prix unitaire} qui sert de référence au calcul des ventes ; une contrainte garantit qu'un \textbf{seul référentiel} est actif à la fois ;
+  \item la \texttt{Vente} conserve une copie (\emph{figée}) du prix unitaire et du référentiel au moment de la vente, afin que l'historique reste exact même si le prix évolue par la suite ;
+  \item le \texttt{SequenceCounter} assure une numérotation annuelle par référentiel, base de la génération du code de vente.
+\end{itemize}
+
+\section{Diagrammes de séquence}
+
+\subsection{Authentification}
+
+La figure~\ref{fig:seq-connexion} décrit le scénario de connexion, incluant la protection contre les tentatives répétées.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{sequence-connexion.png}
+  \caption{Diagramme de séquence : connexion d'un utilisateur}
+  \label{fig:seq-connexion}
+\end{figure}
+\figdesc{L'utilisateur soumet ses identifiants ; le système vérifie d'abord qu'il n'est pas verrouillé (après plusieurs échecs), puis contrôle le mot de passe. En cas de succès, l'utilisateur est redirigé vers l'écran correspondant à son rôle ; en cas d'échec, la tentative est enregistrée et un message d'erreur est affiché.}
+
+\subsection{Enregistrement d'une vente}
+
+La figure~\ref{fig:seq-vente} illustre le scénario central de l'application : la saisie d'une vente et la génération de son code.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{sequence-vente.png}
+  \caption{Diagramme de séquence : enregistrement d'une vente}
+  \label{fig:seq-vente}
+\end{figure}
+\figdesc{Après sélection du demandeur et saisie du prix total ou de la quantité, le système récupère le référentiel actif, calcule la valeur manquante, puis enregistre la vente dans une transaction : le compteur est incrémenté de manière verrouillée pour garantir un numéro unique, et le code \texttt{BG} définitif est attribué avant l'insertion en base. Un ticket imprimable est finalement proposé.}
+
+\subsection{Consultation de l'historique}
+
+La figure~\ref{fig:seq-historique} présente le filtrage de l'historique, réalisé sans rechargement complet grâce à HTMX.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{sequence-historique.png}
+  \caption{Diagramme de séquence : consultation et filtrage de l'historique}
+  \label{fig:seq-historique}
+\end{figure}
+\figdesc{Lorsque l'utilisateur modifie un filtre, une requête est envoyée au serveur, qui interroge la base avec les critères et la pagination, puis renvoie uniquement le fragment de tableau mis à jour. Le navigateur remplace la portion concernée de la page, ce qui rend l'interaction fluide.}
+
+\section{Règles métier clés}
+
+Trois règles structurantes garantissent la cohérence du système :
+
+\begin{itemize}
+  \item \textbf{Code de vente unique} : chaque vente reçoit un code \texttt{BG\_<réf>/<année> <numéro>}, où le numéro est croissant par année et par référentiel ; son attribution est protégée en concurrence par une transaction et un verrou ;
+  \item \textbf{Référentiel actif unique} : au plus un référentiel peut être actif ; c'est son prix unitaire qui alimente toutes les nouvelles ventes ;
+  \item \textbf{Cohérence des demandeurs} : le code d'un demandeur est unique, et le CIN est contrôlé de façon à éviter les doublons entre personnes physiques et morales.
+\end{itemize}
+
+\section{Conclusion}
+
+Ce chapitre a exposé l'architecture MVT retenue, le modèle de données et les principaux scénarios dynamiques de l'application, ainsi que les règles métier garantissant sa cohérence. Le chapitre suivant présente la concrétisation de cette conception.

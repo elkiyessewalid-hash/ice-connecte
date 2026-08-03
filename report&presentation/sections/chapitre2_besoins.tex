@@ -1,0 +1,83 @@
+Ce chapitre formalise les besoins auxquels l'application doit répondre. Il identifie les acteurs du système, décrit les besoins fonctionnels et non fonctionnels, puis synthétise l'ensemble à travers un diagramme de cas d'utilisation.
+
+\section{Identification des acteurs}
+
+L'application distingue trois profils d'utilisateurs, correspondant à des responsabilités différentes au sein du processus de vente. Le tableau~\ref{tab:acteurs} récapitule ces acteurs et leur rôle.
+
+\begin{table}[H]
+\centering
+\caption{Acteurs du système et leurs responsabilités}
+\label{tab:acteurs}
+\begin{tabular}{@{}p{3cm}p{11cm}@{}}
+\toprule
+\textbf{Acteur} & \textbf{Responsabilités} \\
+\midrule
+Administrateur & Accès complet : gestion des utilisateurs, du référentiel et des demandeurs, création et consultation des ventes, exports et pilotage. \\
+Caissier & Création et consultation des ventes, impression des tickets et exports ; pas d'accès à l'administration. \\
+Agent & Consultation seule : tableau de bord et historique des ventes, sans possibilité de création ni d'export. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Besoins fonctionnels}
+
+Les besoins fonctionnels sont organisés par module métier :
+
+\begin{itemize}
+  \item \textbf{Authentification et utilisateurs} : connexion sécurisée ; gestion des comptes (création, modification, activation/désactivation) ; affectation d'un rôle ; recherche et filtrage des utilisateurs.
+  \item \textbf{Référentiel} : paramétrage de l'usine à glace (code, nom, ville, prix unitaire en DH/Kg, logo) ; règle d'un \textbf{seul référentiel actif} à la fois, dont le prix alimente les ventes.
+  \item \textbf{Demandeurs} : gestion des clients, personnes \textbf{physiques} (nom, prénom, CIN) ou \textbf{morales} (raison sociale, représentant) ; statut \textbf{acheteur} ou \textbf{vendeur} ; activation/désactivation ; recherche multicritère.
+  \item \textbf{Ventes} : saisie d'une vente par sélection d'un demandeur et saisie du prix total \textbf{ou} de la quantité, l'autre valeur étant calculée automatiquement ; génération automatique du code \texttt{BG\_<réf>/<année> <numéro>} ; impression du ticket.
+  \item \textbf{Historique et pilotage} : consultation des ventes avec filtres (dates, demandeur, type, code, montant) ; exports Excel et PDF, impression ; tableau de bord avec indicateurs et graphique d'évolution.
+\end{itemize}
+
+\section{Besoins non fonctionnels}
+
+Au-delà des fonctionnalités, l'application doit satisfaire un ensemble d'exigences de qualité :
+
+\begin{itemize}
+  \item \textbf{Sécurité} : contrôle d'accès par rôle sur chaque écran, mots de passe hachés, protection contre les tentatives répétées de connexion (verrouillage) ;
+  \item \textbf{Fiabilité et cohérence} : unicité des codes de vente, numérotation correcte même en cas d'accès concurrents, unicité du référentiel actif ;
+  \item \textbf{Ergonomie} : interface claire et responsive, navigation intuitive, retours visuels et messages explicites ;
+  \item \textbf{Performance} : pagination des listes et réponses rapides sur les écrans de consultation ;
+  \item \textbf{Portabilité} : fonctionnement sur un simple poste (base SQLite) comme sur un serveur (PostgreSQL) ;
+  \item \textbf{Maintenabilité} : code structuré, séparation claire des responsabilités et documentation.
+\end{itemize}
+
+\section{Diagramme de cas d'utilisation}
+
+La figure~\ref{fig:cas-utilisation} synthétise les interactions entre les acteurs et les fonctionnalités du système.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.72\textwidth]{cas-utilisation.png}
+  \caption{Diagramme de cas d'utilisation d'IceVentes}
+  \label{fig:cas-utilisation}
+\end{figure}
+\figdesc{Le diagramme met en évidence la séparation des droits : l'Agent est limité à la consultation (tableau de bord, historique, impression) ; le Caissier peut en plus créer des ventes et exporter ; l'Administrateur dispose de l'intégralité des fonctions, dont la gestion des utilisateurs, du référentiel et des demandeurs. La création d'une vente inclut l'impression d'un ticket.}
+
+Le tableau~\ref{tab:droits} précise la matrice des droits par rôle.
+
+\begin{table}[H]
+\centering
+\caption{Matrice des droits par rôle}
+\label{tab:droits}
+\begin{tabular}{@{}p{6cm}ccc@{}}
+\toprule
+\textbf{Fonctionnalité} & \textbf{Admin} & \textbf{Caissier} & \textbf{Agent} \\
+\midrule
+Se connecter & Oui & Oui & Oui \\
+Tableau de bord & Oui & Oui & Oui \\
+Historique des ventes & Oui & Oui & Oui \\
+Créer une vente & Oui & Oui & Non \\
+Exporter (Excel / PDF) & Oui & Oui & Non \\
+Gérer les utilisateurs & Oui & Non & Non \\
+Gérer le référentiel & Oui & Non & Non \\
+Gérer les demandeurs & Oui & Non & Non \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+
+Ce chapitre a défini les besoins fonctionnels et non fonctionnels de l'application, ainsi que les acteurs et leurs droits. Ces éléments constituent le socle de la conception présentée dans le chapitre suivant.
