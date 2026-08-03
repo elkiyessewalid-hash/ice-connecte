@@ -31,12 +31,13 @@ git --version
 ## 2. Récupérer le projet
 
 ```bash
-# Cloner la branche zakaria du dépôt
-git clone -b zakaria https://github.com/elkiyessewalid-hash/ice-connecte.git
+# Cloner le dépôt (branche par défaut : main)
+git clone https://github.com/elkiyessewalid-hash/ice-connecte.git
 cd ice-connecte
 ```
 
-> Si le projet est dans un sous-dossier `gestion-glace/`, faites `cd gestion-glace` avant la suite.
+> Pas de Git ? Téléchargez le ZIP depuis GitHub (bouton **Code → Download ZIP**),
+> décompressez-le, puis ouvrez un terminal **dans le dossier `ice-connecte`**.
 
 ---
 
@@ -81,10 +82,14 @@ cp .env.example .env
 Ouvrez `.env` et adaptez au minimum :
 
 ```ini
-SECRET_KEY=collez-ici-une-cle-secrete
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
+SECRET_KEY=collez-ici-une-cle-secrete
 ```
+
+> 🔴 **`DEBUG=True` est indispensable en local.** Avec `DEBUG=False`, l'application force la
+> redirection HTTPS **et refuse même de démarrer** tant que `SECRET_KEY`/`ALLOWED_HOSTS` gardent
+> leurs valeurs par défaut (garde-fou de sécurité prévu pour la production).
 
 Générer une clé secrète solide :
 
@@ -115,6 +120,12 @@ Cela crée un référentiel actif, deux demandeurs et **trois comptes** :
 | `admin` | `Admin2026!` | Admin |
 | `agent` | `Agent2026!` | Agent |
 | `caissier` | `Caissier2026!` | Caissier |
+
+> 💡 Pour tester le tableau de bord, le graphique et l'historique avec beaucoup de données,
+> peuplez de nombreuses ventes (dates variées sur ~16 mois, montants aléatoires) :
+> ```bash
+> python manage.py seed_ventes --count 300 --days 500
+> ```
 
 **Option B — créer uniquement un administrateur :**
 ```bash
@@ -161,6 +172,7 @@ Pour arrêter le serveur : `Ctrl + C`.
 | Redirection HTTPS / page inaccessible | `DEBUG` est à `False` dans `.env` → passez-le à `True` en développement. |
 | `no such table` | Vous avez oublié `python manage.py migrate`. |
 | Le port 8000 est occupé | Lancez `python manage.py runserver 8001` et ouvrez le port 8001. |
+| Compte « désactivé » / connexion refusée après plusieurs essais | Sécurité anti-force-brute (**django-axes**) : après 5 échecs, le couple IP + login est verrouillé ~1 h. Attendez, ou relancez le serveur pour réinitialiser en développement. |
 | `psycopg2` / connexion Postgres échoue | Vérifiez que PostgreSQL est démarré et que `DATABASE_URL` est correcte, ou retirez-la pour repasser en SQLite. |
 
 ---
