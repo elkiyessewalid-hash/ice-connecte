@@ -10,6 +10,7 @@ Diagrammes de conception, fournis en **deux formats** :
 | Cas d'utilisation | [`cas-utilisation.puml`](cas-utilisation.puml) | [`img/cas-utilisation.png`](img/cas-utilisation.png) | [`diagramme-cas-utilisation.md`](diagramme-cas-utilisation.md) |
 | Classes | [`classes.puml`](classes.puml) | [`img/classes.png`](img/classes.png) | [`diagramme-de-classes.md`](diagramme-de-classes.md) |
 | Séquences | [`sequences.puml`](sequences.puml) | `img/sequence-*.png` | [`diagrammes-de-sequence.md`](diagrammes-de-sequence.md) |
+| Gantt (planning) | [`gantt.puml`](gantt.puml) | [`img/gantt.png`](img/gantt.png) | [`diagramme-gantt.md`](diagramme-gantt.md) |
 
 ---
 
@@ -30,6 +31,11 @@ Diagrammes de conception, fournis en **deux formats** :
 ### 3.3 Consulter / filtrer l'historique (HTMX)
 ![Séquence historique](img/sequence-historique.png)
 
+## 4. Planning du stage (Gantt)
+Période : **06/07/2026 → 06/08/2026**.
+
+![Diagramme de Gantt](img/gantt.png)
+
 ---
 
 ## Recompiler les diagrammes
@@ -38,7 +44,7 @@ Prérequis : **Java**, **PlantUML** et **Graphviz** (`dot`).
 
 ```bash
 cd docs/diagrammes
-plantuml -tpng -o img cas-utilisation.puml classes.puml sequences.puml
+plantuml -tpng -o img cas-utilisation.puml classes.puml sequences.puml gantt.puml
 # SVG (vectoriel) :
 plantuml -tsvg -o img *.puml
 ```

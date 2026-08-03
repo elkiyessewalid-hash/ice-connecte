@@ -1,0 +1,47 @@
+@startgantt
+title Planning du stage — Gestion des ventes de blocs de glace (06/07/2026 au 06/08/2026)
+project starts 2026-07-06
+
+[Installation & prise en main] as [T1] lasts 2 days
+[T1] is colored in #A7C7E7
+[Étude de l’existant & des besoins] as [T2] lasts 3 days
+[T2] starts at [T1]'s end
+[T2] is colored in #A7C7E7
+
+[Correctifs intégrité & permissions] as [T3] lasts 3 days
+[T3] starts 2026-07-13
+[T3] is colored in #A8D5A2
+[UX des listes HTMX & filtres] as [T4] lasts 3 days
+[T4] starts at [T3]'s end
+[T4] is colored in #A8D5A2
+
+[Audit complet du projet] as [T5] lasts 2 days
+[T5] starts 2026-07-20
+[T5] is colored in #F3D18A
+[Remédiation sécurité] as [T6] lasts 3 days
+[T6] starts at [T5]'s end
+[T6] is colored in #F3D18A
+[Remédiation robustesse & intégrité] as [T7] lasts 2 days
+[T7] starts at [T6]'s end
+[T7] is colored in #F3D18A
+
+[Tableau de bord KPIs & graphique] as [T8] lasts 2 days
+[T8] starts 2026-07-27
+[T8] is colored in #CDB4DB
+[Historique demandeur & sélecteurs de date] as [T9] lasts 2 days
+[T9] starts at [T8]'s end
+[T9] is colored in #CDB4DB
+[Jeu de données de démonstration] as [T10] lasts 1 days
+[T10] starts at [T9]'s end
+[T10] is colored in #CDB4DB
+
+[Documentation guide & README] as [T11] lasts 1 days
+[T11] starts 2026-08-03
+[T11] is colored in #D3D3D3
+[Diagrammes UML & Gantt] as [T12] lasts 1 days
+[T12] starts at [T11]'s end
+[T12] is colored in #D3D3D3
+[Tests, revue & soutenance] as [T13] lasts 2 days
+[T13] starts at [T12]'s end
+[T13] is colored in #D3D3D3
+@endgantt
