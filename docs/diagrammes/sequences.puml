@@ -1,0 +1,77 @@
+@startuml sequence-connexion
+title Séquence — Connexion (protection anti-force-brute)
+skinparam shadowing false
+actor Utilisateur as U
+participant "Navigateur" as N
+participant "LoginView" as V
+participant "django-axes" as A
+database "Base de données" as DB
+
+U -> N : saisit login + mot de passe
+N -> V : POST /comptes/login/
+V -> A : authenticate(request, login, mdp)
+A -> DB : vérifie le verrou (IP + login)
+alt Compte verrouillé (>= 5 échecs)
+  A --> V : accès refusé
+  V --> N : 403 (verrouillé ~1 h)
+else Identifiants valides
+  A -> DB : contrôle du mot de passe (haché)
+  DB --> A : OK
+  A --> V : utilisateur authentifié
+  V --> N : 302 redirection selon le rôle
+  note over V, N
+    Admin -> tableau de bord
+    Caissier -> nouvelle vente
+    Agent -> historique
+  end note
+else Identifiants invalides
+  A -> DB : enregistre la tentative
+  V --> N : 200 + message « login ou mot de passe incorrect »
+end
+@enduml
+
+@startuml sequence-vente
+title Séquence — Enregistrement d’une vente
+skinparam shadowing false
+actor "Caissier / Admin" as C
+participant "NouvelleVenteView" as V
+participant "VenteForm" as F
+participant "Referentiel" as R
+participant "SequenceCounter" as S
+participant "Vente" as VE
+database "Base de données" as DB
+
+C -> V : choisit un demandeur + Prix total OU Quantité
+V -> R : get_active()
+R --> V : référentiel actif (prix_unitaire)
+V -> F : is_valid()
+F -> F : calcule la valeur manquante (prix unitaire du référentiel)
+note right of F : date non future ; montants bornés
+F --> V : données validées
+group transaction.atomic()
+  V -> VE : save()
+  VE -> S : get_or_create(annee, referentiel) [select_for_update]
+  S -> S : dernier_numero += 1
+  S --> VE : numéro annuel
+  VE -> VE : code_vente = BG_<ref>/<AA> <NNNNN>
+  VE -> DB : INSERT (prix unitaire + référentiel figés)
+end
+V --> C : ticket imprimable (2 exemplaires sur une page A4)
+@enduml
+
+@startuml sequence-historique
+title Séquence — Consulter / filtrer l’historique (HTMX)
+skinparam shadowing false
+actor Utilisateur as U
+participant "Navigateur" as N
+participant "HistoriqueVentesView" as H
+database "Base de données" as DB
+
+U -> N : modifie un filtre (dates, demandeur, type, montant)
+N -> H : GET /ventes/historique/?filtres (en-tête HX-Request)
+H -> H : analyse et valide les filtres
+H -> DB : requête filtrée + pagination (5 / page)
+DB --> H : page de ventes
+H --> N : fragment HTML (tableau + pagination)
+N -> N : remplace #vente-results sans recharger la page
+@enduml

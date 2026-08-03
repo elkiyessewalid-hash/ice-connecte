@@ -1,0 +1,82 @@
+@startuml classes
+title Diagramme de classes — Gestion des ventes de blocs de glace
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+
+class User {
+  +username : CharField (Login, 30, unique)
+  +first_name : CharField (Prénom, 25)
+  +last_name : CharField (Nom, 25)
+  +role : CharField (ADMIN | AGENT | CAISSIER)
+  +is_active : BooleanField
+  +password : CharField (haché)
+  --
+  +is_admin() : bool
+  +is_caissier() : bool
+  +is_agent() : bool
+  +role_home_url_name() : str
+}
+
+class Demandeur {
+  +code : CharField (10, unique)
+  +statut : CharField (ACHETEUR | VENDEUR)
+  +categorie : CharField (PHYSIQUE | MORALE)
+  +libelle : CharField (recalculé)
+  +is_active : BooleanField
+  +created_at : DateTimeField
+  +updated_at : DateTimeField
+  --
+  +compute_libelle() : str
+}
+
+class DemandeurPhysique {
+  +cin : CharField (unique)
+  +nom : CharField
+  +prenom : CharField
+}
+
+class DemandeurMorale {
+  +raison_sociale : CharField
+  +nom_representant : CharField
+  +prenom_representant : CharField
+  +cin_representant : CharField (unique)
+}
+
+class Referentiel {
+  +code : CharField (unique)
+  +nom : CharField
+  +ville : CharField
+  +prix_unitaire : DecimalField (DH/Kg)
+  +logo : ImageField
+  +is_active : BooleanField (au plus un actif)
+  --
+  +{static} get_active() : Referentiel
+  +save()
+}
+
+class Vente {
+  +code_vente : CharField (unique)
+  +prix_unitaire : DecimalField (figé)
+  +quantite : DecimalField (Kg)
+  +prix_total : DecimalField (DH)
+  +date_vente : DateField
+  +created_at : DateTimeField
+  --
+  +save()
+}
+
+class SequenceCounter {
+  +annee : PositiveIntegerField
+  +dernier_numero : PositiveIntegerField
+  .. unique (annee, referentiel) ..
+}
+
+Demandeur <|-- DemandeurPhysique
+Demandeur <|-- DemandeurMorale
+
+Vente "0..*" --> "1" Demandeur : demandeur (PROTECT)
+Vente "0..*" --> "1" Referentiel : referentiel (PROTECT)
+Vente "0..*" --> "1" User : utilisateur (PROTECT)
+SequenceCounter "0..*" --> "1" Referentiel : referentiel (CASCADE)
+@enduml

@@ -1,0 +1,47 @@
+@startuml cas-utilisation
+title Diagramme de cas d’utilisation — Gestion des ventes de blocs de glace
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorStyle awesome
+
+actor "Admin" as admin
+actor "Caissier" as caissier
+actor "Agent" as agent
+
+rectangle "Système — Gestion des ventes de blocs de glace" {
+  usecase "Se connecter" as UC1
+  usecase "Consulter le tableau de bord" as UC2
+  usecase "Consulter l’historique des ventes" as UC3
+  usecase "Imprimer un ticket" as UC4
+  usecase "Créer une vente" as UC5
+  usecase "Exporter Excel / PDF" as UC6
+  usecase "Gérer les utilisateurs" as UC7
+  usecase "Gérer le référentiel" as UC8
+  usecase "Gérer les demandeurs" as UC9
+}
+
+agent --> UC1
+agent --> UC2
+agent --> UC3
+agent --> UC4
+
+caissier --> UC1
+caissier --> UC2
+caissier --> UC3
+caissier --> UC4
+caissier --> UC5
+caissier --> UC6
+
+admin --> UC1
+admin --> UC2
+admin --> UC3
+admin --> UC4
+admin --> UC5
+admin --> UC6
+admin --> UC7
+admin --> UC8
+admin --> UC9
+
+UC5 ..> UC4 : <<include>>
+@enduml
